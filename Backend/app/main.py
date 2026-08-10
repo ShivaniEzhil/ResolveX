@@ -2,7 +2,7 @@ from fastapi import FastAPI
 
 from app.database.mongodb import check_database_connection
 from app.routes.complaints import router as complaints_router
-
+from app.routes.auth import router as auth_router
 
 app = FastAPI(
     title="ResolveX API",
@@ -11,6 +11,7 @@ app = FastAPI(
 )
 
 
+app.include_router(auth_router)
 app.include_router(complaints_router)
 
 

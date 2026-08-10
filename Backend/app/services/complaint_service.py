@@ -8,11 +8,15 @@ from app.database.mongodb import database
 complaints_collection = database["complaints"]
 
 
-def create_complaint(complaint_data: dict) -> dict:
+def create_complaint(
+    complaint_data: dict,
+    user_id: str,
+) -> dict:
     now = datetime.now(timezone.utc)
 
     complaint = {
         **complaint_data,
+        "user_id": user_id,
         "status": "SUBMITTED",
         "priority": "PENDING",
         "category": "PENDING",

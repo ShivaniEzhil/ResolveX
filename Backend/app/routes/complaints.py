@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.core.dependencies import get_current_user
 from app.schemas.complaint import ComplaintCreate, ComplaintUpdate
 from app.services.complaint_service import (
     create_complaint,
@@ -17,9 +18,13 @@ router = APIRouter(
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def submit_complaint(complaint: ComplaintCreate):
+def submit_complaint(
+    complaint: ComplaintCreate,
+    current_user=Depends(get_current_user),
+):
     created_complaint = create_complaint(
-        complaint.model_dump()
+        complaint.model_dump(),
+        current_user["id"],
     )
 
     return {
