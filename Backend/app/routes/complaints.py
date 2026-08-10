@@ -4,8 +4,9 @@ from app.core.dependencies import get_current_user
 from app.schemas.complaint import ComplaintCreate, ComplaintUpdate
 from app.services.complaint_service import (
     create_complaint,
-    get_all_complaints,
+    get_complaints_for_user,
     get_complaint_by_id,
+    can_access_complaint,
     update_complaint,
     delete_complaint,
 )
@@ -34,8 +35,10 @@ def submit_complaint(
 
 
 @router.get("/")
-def get_complaints():
-    complaints = get_all_complaints()
+def get_complaints(
+    current_user=Depends(get_current_user),
+):
+    complaints = get_complaints_for_user(current_user)
 
     return {
         "count": len(complaints),
@@ -44,13 +47,25 @@ def get_complaints():
 
 
 @router.get("/{complaint_id}")
-def get_complaint(complaint_id: str):
+def get_complaint(
+    complaint_id: str,
+    current_user=Depends(get_current_user),
+):
     complaint = get_complaint_by_id(complaint_id)
 
     if complaint is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Complaint not found",
+        )
+
+    if not can_access_complaint(
+        complaint,
+        current_user,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to access this complaint",
         )
 
     return {
@@ -61,17 +76,31 @@ def get_complaint(complaint_id: str):
 def update_complaint_endpoint(
     complaint_id: str,
     complaint: ComplaintUpdate,
+    current_user=Depends(get_current_user),
 ):
-    updated_complaint = update_complaint(
-        complaint_id,
-        complaint.model_dump(exclude_unset=True),
+    existing_complaint = get_complaint_by_id(
+        complaint_id
     )
 
-    if updated_complaint is None:
+    if existing_complaint is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Complaint not found",
         )
+
+    if not can_access_complaint(
+        existing_complaint,
+        current_user,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to update this complaint",
+        )
+
+    updated_complaint = update_complaint(
+        complaint_id,
+        complaint.model_dump(exclude_unset=True),
+    )
 
     return {
         "message": "Complaint updated successfully",
@@ -80,14 +109,30 @@ def update_complaint_endpoint(
 
 
 @router.delete("/{complaint_id}")
-def delete_complaint_endpoint(complaint_id: str):
-    deleted = delete_complaint(complaint_id)
+def delete_complaint_endpoint(
+    complaint_id: str,
+    current_user=Depends(get_current_user),
+):
+    existing_complaint = get_complaint_by_id(
+        complaint_id
+    )
 
-    if not deleted:
+    if existing_complaint is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Complaint not found",
         )
+
+    if not can_access_complaint(
+        existing_complaint,
+        current_user,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have permission to delete this complaint",
+        )
+
+    deleted = delete_complaint(complaint_id)
 
     return {
         "message": "Complaint deleted successfully",

@@ -100,3 +100,53 @@ def delete_complaint(complaint_id: str) -> bool:
     )
 
     return result.deleted_count > 0
+
+def get_complaints_for_user(user: dict) -> list:
+    role = user["role"]
+
+    if role == "ADMIN":
+        query = {}
+
+    elif role == "STAFF":
+        query = {
+            "assigned_to": user["id"]
+        }
+
+    else:
+        query = {
+            "user_id": user["id"]
+        }
+
+    complaints = []
+
+    for complaint in complaints_collection.find(query).sort(
+        "created_at",
+        -1,
+    ):
+        complaint["id"] = str(complaint["_id"])
+        complaint.pop("_id", None)
+
+        complaints.append(complaint)
+
+    return complaints
+
+def can_access_complaint(
+    complaint: dict,
+    user: dict,
+) -> bool:
+
+    role = user["role"]
+
+    # Admin can access everything
+    if role == "ADMIN":
+        return True
+
+    # Student can access only their own complaint
+    if role == "STUDENT":
+        return complaint.get("user_id") == user["id"]
+
+    # Staff can access complaints assigned to them
+    if role == "STAFF":
+        return complaint.get("assigned_to") == user["id"]
+
+    return False
