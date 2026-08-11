@@ -10,6 +10,7 @@ complaints_collection = database["complaints"]
 def create_complaint(
     complaint_data: dict,
     user_id: str,
+    ai_analysis: dict | None = None,
 ) -> dict:
     now = datetime.now(timezone.utc)
 
@@ -17,12 +18,27 @@ def create_complaint(
         **complaint_data,
         "user_id": user_id,
         "status": "SUBMITTED",
-        "priority": "PENDING",
-        "category": "PENDING",
-        "department": "PENDING",
+        "priority": (
+            ai_analysis["priority"]
+            if ai_analysis
+            else "PENDING"
+        ),
+        "category": (
+            ai_analysis["category"]
+            if ai_analysis
+            else "PENDING"
+        ),
+        "department": (
+            ai_analysis["department"]
+            if ai_analysis
+            else "PENDING"
+        ),
         "created_at": now,
         "updated_at": now,
     }
+    if ai_analysis:
+        complaint["ai_summary"] = ai_analysis["summary"]
+        complaint["ai_reason"] = ai_analysis["reason"]
 
     result = complaints_collection.insert_one(complaint)
 

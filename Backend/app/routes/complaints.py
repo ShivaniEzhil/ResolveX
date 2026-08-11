@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from app.services.user_service import get_user_by_id
 from app.core.dependencies import get_current_user
+from app.services.ai_service import analyze_complaint
 from app.schemas.complaint import (
     ComplaintCreate,
     ComplaintUpdate,
@@ -31,9 +32,31 @@ def submit_complaint(
     complaint: ComplaintCreate,
     current_user=Depends(get_current_user),
 ):
+    ai_analysis = None
+
+    try:
+        ai_result = analyze_complaint(
+            title=complaint.title,
+            description=complaint.description,
+            location=complaint.location,
+        )
+
+        ai_analysis = {
+            "category": ai_result.category.value,
+            "priority": ai_result.priority.value,
+            "department": ai_result.department.value,
+            "summary": ai_result.summary,
+            "reason": ai_result.reason,
+        }
+
+    except Exception:
+        # AI failure should not prevent complaint submission
+        ai_analysis = None
+
     created_complaint = create_complaint(
         complaint.model_dump(),
         current_user["id"],
+        ai_analysis,
     )
 
     return {
