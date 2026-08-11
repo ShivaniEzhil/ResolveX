@@ -2,7 +2,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.security import decode_access_token
-from app.services.auth_service import get_user_by_id
+from app.services.user_service import get_user_by_id
 from typing import Callable
 
 
@@ -37,10 +37,6 @@ def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found or inactive",
         )
-
-    user["id"] = str(user["_id"])
-    user.pop("_id", None)
-    user.pop("password_hash", None)
 
     return user
 

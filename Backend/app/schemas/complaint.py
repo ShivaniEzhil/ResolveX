@@ -42,7 +42,8 @@ class ComplaintUpdate(BaseModel):
         max_length=150,
     )
 
-    status: str | None = None
-    priority: str | None = None
-    category: str | None = None
-    department: str | None = None
+class ComplaintAssignment(BaseModel):
+    staff_id: str
+
+class ComplaintStatusUpdate(BaseModel):
+    status: str

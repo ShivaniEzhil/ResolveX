@@ -1,5 +1,4 @@
 from datetime import datetime, timezone
-
 from bson import ObjectId
 
 from app.database.mongodb import database
@@ -150,3 +149,68 @@ def can_access_complaint(
         return complaint.get("assigned_to") == user["id"]
 
     return False
+
+def assign_complaint(
+    complaint_id: str,
+    staff_id: str,
+) -> dict | None:
+
+    if not ObjectId.is_valid(complaint_id):
+        return None
+
+    result = complaints_collection.update_one(
+        {"_id": ObjectId(complaint_id)},
+        {
+            "$set": {
+                "assigned_to": staff_id,
+                "status": "ASSIGNED",
+                "updated_at": datetime.now(timezone.utc),
+            }
+        },
+    )
+
+    if result.matched_count == 0:
+        return None
+
+    return get_complaint_by_id(complaint_id)
+
+def update_complaint_status(
+    complaint_id: str,
+    new_status: str,
+) -> dict | None:
+
+    if not ObjectId.is_valid(complaint_id):
+        return None
+
+    complaint = complaints_collection.find_one(
+        {"_id": ObjectId(complaint_id)}
+    )
+
+    if complaint is None:
+        return None
+
+    current_status = complaint.get("status")
+
+    allowed_transitions = {
+        "ASSIGNED": ["IN_PROGRESS"],
+        "IN_PROGRESS": ["RESOLVED"],
+        "RESOLVED": [],
+    }
+
+    if new_status not in allowed_transitions.get(current_status, []):
+        raise ValueError(
+            f"Invalid status transition: "
+            f"{current_status} -> {new_status}"
+        )
+
+    complaints_collection.update_one(
+        {"_id": ObjectId(complaint_id)},
+        {
+            "$set": {
+                "status": new_status,
+                "updated_at": datetime.now(timezone.utc),
+            }
+        },
+    )
+
+    return get_complaint_by_id(complaint_id)

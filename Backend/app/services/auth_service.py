@@ -1,5 +1,3 @@
-from bson import ObjectId
-
 from app.core.security import (
     create_access_token,
     hash_password,
@@ -15,15 +13,6 @@ users_collection = database["users"]
 def get_user_by_email(email: str):
     return users_collection.find_one(
         {"email": email.lower()}
-    )
-
-
-def get_user_by_id(user_id: str):
-    if not ObjectId.is_valid(user_id):
-        return None
-
-    return users_collection.find_one(
-        {"_id": ObjectId(user_id)}
     )
 
 
