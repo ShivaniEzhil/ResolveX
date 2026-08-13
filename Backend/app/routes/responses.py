@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.dependencies import get_current_user
 from app.schemas.response import ComplaintResponseCreate
+from app.services.audit_service import create_audit_log
 from app.services.notification_service import create_notification
 from app.services.complaint_service import (
     get_complaint_by_id,
@@ -55,6 +56,16 @@ def add_complaint_response(
         complaint_id=complaint_id,
         user_id=current_user["id"],
         message=response_data.message,
+    )
+
+    create_audit_log(
+        user_id=current_user["id"],
+        complaint_id=complaint_id,
+        action="RESPONSE_ADDED",
+        description="A response was added to the complaint",
+        metadata={
+            "response_id": created_response["id"],
+        },
     )
 
     create_notification(

@@ -5,6 +5,7 @@ from app.routes.complaints import router as complaints_router
 from app.routes.auth import router as auth_router
 from app.routes.responses import router as responses_router
 from app.routes.notifications import router as notifications_router
+from app.routes.audit import router as audit_router
 
 app = FastAPI(
     title="ResolveX API",
@@ -18,6 +19,7 @@ app.include_router(complaints_router)
 app.include_router(users_router)
 app.include_router(responses_router)
 app.include_router(notifications_router)
+app.include_router(audit_router)
 
 @app.get("/api/health")
 def health_check():

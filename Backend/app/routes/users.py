@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.core.dependencies import get_current_user
+from app.services.audit_service import create_audit_log
 
 from app.schemas.user import (
     UserRoleUpdate,
@@ -88,6 +89,8 @@ def change_user_role(
             detail="User not found",
         )
 
+    old_role = user["role"]
+    
     # Don't modify another ADMIN's role
     if user["role"] == "ADMIN":
         raise HTTPException(
@@ -98,6 +101,20 @@ def change_user_role(
     updated_user = update_user_role(
         user_id,
         role_update.role,
+    )
+
+    create_audit_log(
+        user_id=current_user["id"],
+        action="USER_ROLE_CHANGED",
+        description=(
+            f"User role changed from "
+            f"{old_role} to {role_update.role}"
+        ),
+        metadata={
+            "target_user_id": user_id,
+            "old_role": old_role,
+            "new_role": role_update.role,
+        },
     )
 
     return {
@@ -129,9 +146,25 @@ def change_user_status(
             detail="User not found",
         )
 
+    old_status = user["is_active"]
+
     updated_user = update_user_status(
         user_id,
         status_update.is_active,
+    )
+
+    create_audit_log(
+        user_id=current_user["id"],
+        action="USER_STATUS_CHANGED",
+        description=(
+            f"User active status changed from "
+            f"{old_status} to {status_update.is_active}"
+        ),
+        metadata={
+            "target_user_id": user_id,
+            "old_status": old_status,
+            "new_status": status_update.is_active,
+        },
     )
 
     return {

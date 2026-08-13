@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.services.routing_service import find_best_staff
 from app.services.user_service import get_user_by_id
+from app.services.audit_service import create_audit_log
 from app.services.notification_service import create_notification
 from app.core.dependencies import get_current_user
 from app.services.ai_service import analyze_complaint
@@ -61,6 +62,12 @@ def submit_complaint(
         current_user["id"],
         ai_analysis,
     )
+    create_audit_log(
+        user_id=current_user["id"],
+        complaint_id=created_complaint["id"],
+        action="COMPLAINT_CREATED",
+        description="Complaint created successfully",
+    )
     if ai_analysis:
         staff = find_best_staff(
         ai_analysis["department"]
@@ -84,6 +91,17 @@ def submit_complaint(
                         f'"{created_complaint["title"]}"'
                     ),
                     notification_type="COMPLAINT_ASSIGNED",
+                )
+
+                create_audit_log(
+                    user_id=None,
+                    complaint_id=created_complaint["id"],
+                    action="COMPLAINT_ASSIGNED",
+                    description="Complaint automatically assigned to staff",
+                    metadata={
+                        "assigned_to": staff["id"],
+                        "assignment_type": "AUTOMATIC",
+                    },
                 )
 
     return {
@@ -116,6 +134,8 @@ def get_complaint(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Complaint not found",
         )
+    
+    old_status = complaint.get("status")
 
     if not can_access_complaint(
         complaint,
@@ -238,6 +258,17 @@ def assign_complaint_endpoint(
             detail="Complaint not found",
         )
 
+    create_audit_log(
+        user_id=current_user["id"],
+        complaint_id=complaint_id,
+        action="COMPLAINT_ASSIGNED",
+        description="Complaint manually assigned by administrator",
+        metadata={
+            "assigned_to": assignment.staff_id,
+            "assignment_type": "MANUAL",
+        },
+    )
+
     return {
         "message": "Complaint assigned successfully",
         "complaint": updated_complaint,
@@ -285,6 +316,20 @@ def update_status(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(error),
         )
+
+    create_audit_log(
+        user_id=current_user["id"],
+        complaint_id=complaint_id,
+        action="STATUS_CHANGED",
+        description=(
+            f"Complaint status changed from "
+            f"{old_status} to {status_update.status}"
+        ),
+        metadata={
+            "old_status": old_status,
+            "new_status": status_update.status,
+        },
+    )
 
     # Notify the student who created the complaint
     if status_update.status == "IN_PROGRESS":
