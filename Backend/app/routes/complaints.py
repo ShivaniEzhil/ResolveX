@@ -112,14 +112,39 @@ def submit_complaint(
 
 @router.get("/")
 def get_complaints(
+    status_filter: str | None = None,
+    priority: str | None = None,
+    category: str | None = None,
+    department: str | None = None,
+    search: str | None = None,
+    page: int = 1,
+    limit: int = 10,
     current_user=Depends(get_current_user),
 ):
-    complaints = get_complaints_for_user(current_user)
+    if page < 1:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Page must be greater than or equal to 1",
+        )
 
-    return {
-        "count": len(complaints),
-        "complaints": complaints,
-    }
+    if limit < 1 or limit > 100:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Limit must be between 1 and 100",
+        )
+
+    complaints = get_complaints_for_user(
+        user=current_user,
+        status_filter=status_filter,
+        priority=priority,
+        category=category,
+        department=department,
+        search=search,
+        page=page,
+        limit=limit,
+    )
+
+    return complaints
 
 
 @router.get("/{complaint_id}")

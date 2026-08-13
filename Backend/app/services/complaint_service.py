@@ -116,9 +116,20 @@ def delete_complaint(complaint_id: str) -> bool:
 
     return result.deleted_count > 0
 
-def get_complaints_for_user(user: dict) -> list:
+def get_complaints_for_user(
+    user: dict,
+    status_filter: str | None = None,
+    priority: str | None = None,
+    category: str | None = None,
+    department: str | None = None,
+    search: str | None = None,
+    page: int = 1,
+    limit: int = 10,
+) -> dict:
+
     role = user["role"]
 
+    # Base query based on RBAC
     if role == "ADMIN":
         query = {}
 
@@ -132,18 +143,72 @@ def get_complaints_for_user(user: dict) -> list:
             "user_id": user["id"]
         }
 
+    # Apply optional filters
+    if status_filter:
+        query["status"] = status_filter
+
+    if priority:
+        query["priority"] = priority
+
+    if category:
+        query["category"] = category
+
+    if department:
+        query["department"] = department
+
+    # Search title and description
+    if search:
+        query["$or"] = [
+            {
+                "title": {
+                    "$regex": search,
+                    "$options": "i",
+                }
+            },
+            {
+                "description": {
+                    "$regex": search,
+                    "$options": "i",
+                }
+            },
+        ]
+
+    # Count before pagination
+    total = complaints_collection.count_documents(query)
+
+    # Pagination
+    skip = (page - 1) * limit
+
     complaints = []
 
-    for complaint in complaints_collection.find(query).sort(
-        "created_at",
-        -1,
-    ):
+    cursor = (
+        complaints_collection
+        .find(query)
+        .sort("created_at", -1)
+        .skip(skip)
+        .limit(limit)
+    )
+
+    for complaint in cursor:
         complaint["id"] = str(complaint["_id"])
         complaint.pop("_id", None)
 
         complaints.append(complaint)
 
-    return complaints
+    total_pages = (
+        (total + limit - 1) // limit
+        if total > 0
+        else 0
+    )
+
+    return {
+        "count": len(complaints),
+        "total": total,
+        "page": page,
+        "limit": limit,
+        "total_pages": total_pages,
+        "complaints": complaints,
+    }
 
 def can_access_complaint(
     complaint: dict,
