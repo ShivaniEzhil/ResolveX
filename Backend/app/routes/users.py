@@ -5,6 +5,7 @@ from app.core.dependencies import get_current_user
 from app.schemas.user import (
     UserRoleUpdate,
     UserStatusUpdate,
+    UserDepartmentUpdate,
 )
 
 from app.services.user_service import (
@@ -12,6 +13,7 @@ from app.services.user_service import (
     get_user_by_id,
     update_user_role,
     update_user_status,
+    update_user_department,
 )
 
 
@@ -134,5 +136,37 @@ def change_user_status(
 
     return {
         "message": "User status updated successfully",
+        "user": updated_user,
+    }
+
+@router.put("/{user_id}/department")
+def change_user_department(
+    user_id: str,
+    department_update: UserDepartmentUpdate,
+    current_user=Depends(get_current_user),
+):
+    require_admin(current_user)
+
+    user = get_user_by_id(user_id)
+
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    if user["role"] != "STAFF":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Only staff members can have a department",
+        )
+
+    updated_user = update_user_department(
+        user_id,
+        department_update.department,
+    )
+
+    return {
+        "message": "Staff department updated successfully",
         "user": updated_user,
     }

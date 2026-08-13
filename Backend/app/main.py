@@ -3,6 +3,8 @@ from app.routes.users import router as users_router
 from app.database.mongodb import check_database_connection
 from app.routes.complaints import router as complaints_router
 from app.routes.auth import router as auth_router
+from app.routes.responses import router as responses_router
+from app.routes.notifications import router as notifications_router
 
 app = FastAPI(
     title="ResolveX API",
@@ -14,6 +16,8 @@ app = FastAPI(
 app.include_router(auth_router)
 app.include_router(complaints_router)
 app.include_router(users_router)
+app.include_router(responses_router)
+app.include_router(notifications_router)
 
 @app.get("/api/health")
 def health_check():

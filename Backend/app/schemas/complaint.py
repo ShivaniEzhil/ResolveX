@@ -46,4 +46,7 @@ class ComplaintAssignment(BaseModel):
     staff_id: str
 
 class ComplaintStatusUpdate(BaseModel):
-    status: str
+    status: str = Field(
+        ...,
+        pattern="^(IN_PROGRESS|RESOLVED)$",
+    )

@@ -81,3 +81,28 @@ def update_user_status(
         return None
 
     return get_user_by_id(user_id)
+
+def update_user_department(
+    user_id: str,
+    department: str,
+) -> dict | None:
+
+    if not ObjectId.is_valid(user_id):
+        return None
+
+    result = users_collection.update_one(
+        {
+            "_id": ObjectId(user_id),
+            "role": "STAFF",
+        },
+        {
+            "$set": {
+                "department": department,
+            }
+        },
+    )
+
+    if result.matched_count == 0:
+        return None
+
+    return get_user_by_id(user_id)

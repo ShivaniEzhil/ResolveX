@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+
+from app.services.routing_service import find_best_staff
 from app.services.user_service import get_user_by_id
+from app.services.notification_service import create_notification
 from app.core.dependencies import get_current_user
 from app.services.ai_service import analyze_complaint
 from app.schemas.complaint import (
@@ -58,6 +61,30 @@ def submit_complaint(
         current_user["id"],
         ai_analysis,
     )
+    if ai_analysis:
+        staff = find_best_staff(
+        ai_analysis["department"]
+        )
+
+        if staff:
+            assigned_complaint = assign_complaint(
+                created_complaint["id"],
+                staff["id"],
+            )
+
+            if assigned_complaint:
+                created_complaint = assigned_complaint
+
+                create_notification(
+                    user_id=staff["id"],
+                    complaint_id=created_complaint["id"],
+                    title="New Complaint Assigned",
+                    message=(
+                        f'A new complaint has been assigned to you: '
+                        f'"{created_complaint["title"]}"'
+                    ),
+                    notification_type="COMPLAINT_ASSIGNED",
+                )
 
     return {
         "message": "Complaint created successfully",
@@ -257,6 +284,31 @@ def update_status(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(error),
+        )
+
+    # Notify the student who created the complaint
+    if status_update.status == "IN_PROGRESS":
+        create_notification(
+            user_id=complaint["user_id"],
+            complaint_id=complaint_id,
+            title="Complaint In Progress",
+            message=(
+                f'Your complaint "{complaint["title"]}" '
+                "is now being processed."
+            ),
+            notification_type="COMPLAINT_STATUS",
+        )
+
+    elif status_update.status == "RESOLVED":
+        create_notification(
+            user_id=complaint["user_id"],
+            complaint_id=complaint_id,
+            title="Complaint Resolved",
+            message=(
+                f'Your complaint "{complaint["title"]}" '
+                "has been resolved."
+            ),
+            notification_type="COMPLAINT_STATUS",
         )
 
     return {
