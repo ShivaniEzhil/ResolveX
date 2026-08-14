@@ -43,7 +43,7 @@ export const ComplaintDetails: React.FC<ComplaintDetailsProps> = ({
           </div>
 
           <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-            {onAssignClick && (
+            {onAssignClick && complaint.status !== "RESOLVED" && (
               <button
                 className="rx-btn rx-btn--outline rx-btn--sm"
                 onClick={onAssignClick}

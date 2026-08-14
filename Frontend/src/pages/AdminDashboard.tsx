@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import DashboardLayout from "../components/layout/DashboardLayout";
 import StatCard from "../components/dashboard/StatCard";
 import StatusChart from "../components/dashboard/StatusChart";
@@ -40,7 +40,7 @@ function AdminDashboard({ onNavigateTab, onSelectComplaint }: AdminDashboardProp
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  const loadDashboard = async () => {
+  const loadDashboard = useCallback(async () => {
     try {
       setLoading(true);
       setError("");
@@ -67,11 +67,13 @@ function AdminDashboard({ onNavigateTab, onSelectComplaint }: AdminDashboardProp
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // API data fetching intentionally updates component state.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadDashboard();
-  }, []);
+  }, [loadDashboard]);
 
   if (loading) {
     return (

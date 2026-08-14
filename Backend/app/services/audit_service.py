@@ -30,6 +30,7 @@ def create_audit_log(
 
     return audit_log
 
+
 def get_audit_logs_for_complaint(
     complaint_id: str,
 ) -> list:
@@ -40,6 +41,21 @@ def get_audit_logs_for_complaint(
         {"complaint_id": complaint_id}
     ).sort("created_at", 1):
 
+        log["id"] = str(log["_id"])
+        log.pop("_id", None)
+
+        logs.append(log)
+
+    return logs
+
+
+def get_all_audit_logs() -> list:
+    logs = []
+
+    for log in audit_collection.find().sort(
+        "created_at",
+        -1,
+    ):
         log["id"] = str(log["_id"])
         log.pop("_id", None)
 

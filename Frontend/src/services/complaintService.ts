@@ -103,4 +103,20 @@ export async function getComplaintResponses(complaintId: string) {
   );
 
   return response.data;
-}
+}
+
+export interface ComplaintResponsePayload {
+  message: string;
+}
+
+export async function createComplaintResponse(
+  complaintId: string,
+  data: ComplaintResponsePayload
+) {
+  const response = await api.post(
+    `/complaints/${complaintId}/responses`,
+    data
+  );
+
+  return response.data;
+}

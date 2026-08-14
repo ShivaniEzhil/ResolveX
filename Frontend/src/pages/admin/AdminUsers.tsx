@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import Card from "../../components/common/Card";
 import SearchBar from "../../components/common/SearchBar";
@@ -7,58 +9,392 @@ import Badge from "../../components/common/Badge";
 import Button from "../../components/common/Button";
 import Modal from "../../components/common/Modal";
 import EmptyState from "../../components/common/EmptyState";
-import { MOCK_USERS } from "../../data/mockData";
+import LoadingState from "../../components/common/LoadingState";
+import ErrorState from "../../components/common/ErrorState";
+
+import {
+  getUsers,
+  updateUserRole,
+  updateUserStatus,
+  updateUserDepartment,
+} from "../../services/userService";
+
 import type { UserManagementItem, UserFilterState } from "../../types/users";
+import type { UserRole } from "../../types/auth";
 
 interface AdminUsersProps {
   onNavigate?: (id: string) => void;
 }
 
-export const AdminUsers: React.FC<AdminUsersProps> = ({ onNavigate }) => {
-  const [users, setUsers] = useState<UserManagementItem[]>(MOCK_USERS);
-  const [filters, setFilters] = useState<UserFilterState>({
-    search: "",
-    role: "",
-    status: "",
-    department: "",
-  });
+export const AdminUsers: React.FC<AdminUsersProps> = ({
+  onNavigate,
+}) => {
+  // ============================================================
+  // Users
+  // ============================================================
 
-  const [selectedUser, setSelectedUser] = useState<UserManagementItem | null>(null);
-  const [modalType, setModalType] = useState<"role" | "status" | "department" | null>(null);
+  const [users, setUsers] = useState<UserManagementItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const [newRole, setNewRole] = useState<string>("STAFF");
-  const [newDepartment, setNewDepartment] = useState<string>("IT");
+  // ============================================================
+  // Filters
+  // ============================================================
 
-  const filteredUsers = users.filter((u) => {
+  const [filters, setFilters] =
+    useState<UserFilterState>({
+      search: "",
+      role: "",
+      status: "",
+      department: "",
+    });
+
+  // ============================================================
+  // Modal state
+  // ============================================================
+
+  const [selectedUser, setSelectedUser] =
+    useState<UserManagementItem | null>(null);
+
+  const [modalType, setModalType] =
+    useState<
+      "role" | "status" | "department" | null
+    >(null);
+
+  const [newRole, setNewRole] =
+    useState<UserRole>("STAFF");
+
+  const [newDepartment, setNewDepartment] =
+    useState("IT");
+
+  const [isSubmitting, setIsSubmitting] =
+    useState(false);
+
+  // ============================================================
+  // Load users from backend
+  // ============================================================
+
+  const loadUsers = async () => {
+    try {
+      setIsLoading(true);
+      setError("");
+
+      const result = await getUsers();
+
+      setUsers(result.users || []);
+    } catch (err) {
+      console.error(
+        "Failed to load users:",
+        err
+      );
+
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 403) {
+          setError(
+            "You do not have permission to manage users."
+          );
+        } else {
+          setError(
+            "Unable to load users. Please try again."
+          );
+        }
+      } else {
+        setError(
+          "Unable to load users. Please try again."
+        );
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchUsers = async () => {
+      try {
+        setError("");
+
+        const result = await getUsers();
+
+        if (isMounted) {
+          setUsers(result.users || []);
+        }
+      } catch (err) {
+        console.error(
+          "Failed to load users:",
+          err
+        );
+
+        if (isMounted) {
+          if (axios.isAxiosError(err)) {
+            if (err.response?.status === 403) {
+              setError(
+                "You do not have permission to manage users."
+              );
+            } else {
+              setError(
+                "Unable to load users. Please try again."
+              );
+            }
+          } else {
+            setError(
+              "Unable to load users. Please try again."
+            );
+          }
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchUsers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // ============================================================
+  // Filtering
+  // ============================================================
+
+  const filteredUsers = users.filter((user) => {
     if (
       filters.search &&
-      !u.name.toLowerCase().includes(filters.search.toLowerCase()) &&
-      !u.email.toLowerCase().includes(filters.search.toLowerCase())
+      !user.name
+        .toLowerCase()
+        .includes(filters.search.toLowerCase()) &&
+      !user.email
+        .toLowerCase()
+        .includes(filters.search.toLowerCase())
     ) {
       return false;
     }
-    if (filters.role && u.role !== filters.role) return false;
-    if (filters.status && String(u.is_active) !== filters.status) return false;
-    if (filters.department && u.department !== filters.department) return false;
+
+    if (
+      filters.role &&
+      user.role !== filters.role
+    ) {
+      return false;
+    }
+
+    if (
+      filters.status &&
+      String(user.is_active) !== filters.status
+    ) {
+      return false;
+    }
+
+    if (
+      filters.department &&
+      user.department !== filters.department
+    ) {
+      return false;
+    }
+
     return true;
   });
 
-  const handleConfirmAction = () => {
-    if (!selectedUser || !modalType) return;
+  // ============================================================
+  // Open role modal
+  // ============================================================
 
-    setUsers((prev) =>
-      prev.map((u) => {
-        if (u.id !== selectedUser.id) return u;
-        if (modalType === "role") return { ...u, role: newRole as any };
-        if (modalType === "status") return { ...u, is_active: !u.is_active };
-        if (modalType === "department") return { ...u, department: newDepartment };
-        return u;
-      })
+  const handleOpenRoleModal = (
+    user: UserManagementItem
+  ) => {
+    setSelectedUser(user);
+
+    setNewRole(
+      user.role === "STUDENT"
+        ? "STAFF"
+        : "STUDENT"
     );
+
+    setModalType("role");
+    setError("");
+  };
+
+  // ============================================================
+  // Open department modal
+  // ============================================================
+
+  const handleOpenDepartmentModal = (
+    user: UserManagementItem
+  ) => {
+    setSelectedUser(user);
+
+    setNewDepartment(
+      user.department || "IT"
+    );
+
+    setModalType("department");
+    setError("");
+  };
+
+  // ============================================================
+  // Open status modal
+  // ============================================================
+
+  const handleOpenStatusModal = (
+    user: UserManagementItem
+  ) => {
+    setSelectedUser(user);
+    setModalType("status");
+    setError("");
+  };
+
+  // ============================================================
+  // Close modal
+  // ============================================================
+
+  const closeModal = () => {
+    if (isSubmitting) {
+      return;
+    }
 
     setModalType(null);
     setSelectedUser(null);
   };
+
+  // ============================================================
+  // Confirm user-management action
+  // ============================================================
+
+  const handleConfirmAction = async () => {
+    if (!selectedUser || !modalType) {
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setError("");
+
+      let result;
+
+      // --------------------------------------------------------
+      // Change Role
+      // --------------------------------------------------------
+
+      if (modalType === "role") {
+        result = await updateUserRole(
+          selectedUser.id,
+          newRole
+        );
+      }
+
+      // --------------------------------------------------------
+      // Change Status
+      // --------------------------------------------------------
+
+      else if (modalType === "status") {
+        result = await updateUserStatus(
+          selectedUser.id,
+          !selectedUser.is_active
+        );
+      }
+
+      // --------------------------------------------------------
+      // Change Department
+      // --------------------------------------------------------
+
+      else {
+        result = await updateUserDepartment(
+          selectedUser.id,
+          newDepartment
+        );
+      }
+
+      // --------------------------------------------------------
+      // Update local state using backend response
+      // --------------------------------------------------------
+
+      setUsers((previousUsers) =>
+        previousUsers.map((user) =>
+          user.id === selectedUser.id
+            ? result.user
+            : user
+        )
+      );
+
+      // Close modal after successful API call
+      setModalType(null);
+      setSelectedUser(null);
+    } catch (err) {
+      console.error(
+        "Failed to update user:",
+        err
+      );
+
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 403) {
+          setError(
+            "You do not have permission to perform this action."
+          );
+        } else if (err.response?.status === 400) {
+          setError(
+            err.response.data?.detail ||
+              "Invalid user update request."
+          );
+        } else if (err.response?.status === 404) {
+          setError("User not found.");
+        } else {
+          setError(
+            "Unable to update user. Please try again."
+          );
+        }
+      } else {
+        setError(
+          "Unable to update user. Please try again."
+        );
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // ============================================================
+  // Loading state
+  // ============================================================
+
+  if (isLoading) {
+    return (
+      <DashboardLayout
+        role="ADMIN"
+        title="User Management"
+        activeItem="users"
+        onNavigate={onNavigate}
+      >
+        <LoadingState message="Loading users..." />
+      </DashboardLayout>
+    );
+  }
+
+  // ============================================================
+  // Initial loading error
+  // ============================================================
+
+  if (error && users.length === 0) {
+    return (
+      <DashboardLayout
+        role="ADMIN"
+        title="User Management"
+        activeItem="users"
+        onNavigate={onNavigate}
+      >
+        <ErrorState
+          message={error}
+          onRetry={loadUsers}
+        />
+      </DashboardLayout>
+    );
+  }
+
+  // ============================================================
+  // Main UI
+  // ============================================================
 
   return (
     <DashboardLayout
@@ -68,7 +404,27 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ onNavigate }) => {
       activeItem="users"
       onNavigate={onNavigate}
     >
-      <Card title={`Users (${filteredUsers.length})`}>
+      {/* API action error */}
+      {error && (
+        <Card>
+          <div
+            style={{
+              padding: 16,
+              color: "var(--rx-danger)",
+            }}
+          >
+            {error}
+          </div>
+        </Card>
+      )}
+
+      <Card
+        title={`Users (${filteredUsers.length})`}
+      >
+        {/* ================================================== */}
+        {/* Search & Filters */}
+        {/* ================================================== */}
+
         <div
           style={{
             display: "flex",
@@ -80,19 +436,44 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ onNavigate }) => {
         >
           <SearchBar
             value={filters.search}
-            onChange={(val) => setFilters({ ...filters, search: val })}
+            onChange={(value) =>
+              setFilters({
+                ...filters,
+                search: value,
+              })
+            }
             placeholder="Search name or email..."
           />
 
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+          <div
+            style={{
+              display: "flex",
+              gap: 10,
+              flexWrap: "wrap",
+            }}
+          >
             <FilterDropdown
               label="Role"
               value={filters.role}
-              onChange={(val) => setFilters({ ...filters, role: val })}
+              onChange={(value) =>
+                setFilters({
+                  ...filters,
+                  role: value,
+                })
+              }
               options={[
-                { value: "ADMIN", label: "Admin" },
-                { value: "STAFF", label: "Staff" },
-                { value: "STUDENT", label: "Student" },
+                {
+                  value: "ADMIN",
+                  label: "Admin",
+                },
+                {
+                  value: "STAFF",
+                  label: "Staff",
+                },
+                {
+                  value: "STUDENT",
+                  label: "Student",
+                },
               ]}
               allLabel="All Roles"
             />
@@ -100,15 +481,30 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ onNavigate }) => {
             <FilterDropdown
               label="Status"
               value={filters.status}
-              onChange={(val) => setFilters({ ...filters, status: val })}
+              onChange={(value) =>
+                setFilters({
+                  ...filters,
+                  status: value,
+                })
+              }
               options={[
-                { value: "true", label: "Active" },
-                { value: "false", label: "Inactive" },
+                {
+                  value: "true",
+                  label: "Active",
+                },
+                {
+                  value: "false",
+                  label: "Inactive",
+                },
               ]}
               allLabel="All Statuses"
             />
           </div>
         </div>
+
+        {/* ================================================== */}
+        {/* Empty State */}
+        {/* ================================================== */}
 
         {filteredUsers.length === 0 ? (
           <EmptyState
@@ -116,6 +512,10 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ onNavigate }) => {
             description="Adjust your search criteria to view matching users."
           />
         ) : (
+          /* ================================================== */
+          /* Users Table */
+          /* ================================================== */
+
           <div className="rx-table-container">
             <table className="rx-table">
               <thead>
@@ -126,74 +526,137 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ onNavigate }) => {
                   <th>Department</th>
                   <th>Status</th>
                   <th>Created</th>
-                  <th style={{ textAlign: "right" }}>Actions</th>
+                  <th
+                    style={{
+                      textAlign: "right",
+                    }}
+                  >
+                    Actions
+                  </th>
                 </tr>
               </thead>
+
               <tbody>
-                {filteredUsers.map((u) => (
-                  <tr key={u.id}>
-                    <td style={{ fontWeight: 600 }}>{u.name}</td>
-                    <td>{u.email}</td>
+                {filteredUsers.map((user) => (
+                  <tr key={user.id}>
+                    {/* Name */}
+                    <td
+                      style={{
+                        fontWeight: 600,
+                      }}
+                    >
+                      {user.name}
+                    </td>
+
+                    {/* Email */}
+                    <td>
+                      {user.email}
+                    </td>
+
+                    {/* Role */}
                     <td>
                       <Badge
                         variant={
-                          u.role === "ADMIN"
+                          user.role === "ADMIN"
                             ? "warning"
-                            : u.role === "STAFF"
+                            : user.role === "STAFF"
                             ? "primary"
                             : "default"
                         }
                       >
-                        {u.role}
+                        {user.role}
                       </Badge>
                     </td>
-                    <td>{u.department || "-"}</td>
+
+                    {/* Department */}
                     <td>
-                      <Badge variant={u.is_active ? "success" : "danger"}>
-                        {u.is_active ? "Active" : "Inactive"}
+                      {user.department || "-"}
+                    </td>
+
+                    {/* Status */}
+                    <td>
+                      <Badge
+                        variant={
+                          user.is_active
+                            ? "success"
+                            : "danger"
+                        }
+                      >
+                        {user.is_active
+                          ? "Active"
+                          : "Inactive"}
                       </Badge>
                     </td>
-                    <td style={{ color: "var(--rx-text-muted)", fontSize: "0.8125rem" }}>
-                      {new Date(u.created_at).toLocaleDateString()}
+
+                    {/* Created */}
+                    <td
+                      style={{
+                        color:
+                          "var(--rx-text-muted)",
+                        fontSize: "0.8125rem",
+                      }}
+                    >
+                      {new Date(
+                        user.created_at
+                      ).toLocaleDateString()}
                     </td>
-                    <td style={{ textAlign: "right" }}>
-                      <div style={{ display: "inline-flex", gap: 6 }}>
-                        {u.role !== "ADMIN" && (
+
+                    {/* Actions */}
+                    <td
+                      style={{
+                        textAlign: "right",
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: "inline-flex",
+                          gap: 6,
+                        }}
+                      >
+                        {/* Change Role */}
+                        {user.role !== "ADMIN" && (
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => {
-                              setSelectedUser(u);
-                              setNewRole(u.role === "STUDENT" ? "STAFF" : "STUDENT");
-                              setModalType("role");
-                            }}
+                            onClick={() =>
+                              handleOpenRoleModal(
+                                user
+                              )
+                            }
                           >
                             Change Role
                           </Button>
                         )}
-                        {u.role === "STAFF" && (
+
+                        {/* Change Department */}
+                        {user.role === "STAFF" && (
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => {
-                              setSelectedUser(u);
-                              setNewDepartment(u.department || "IT");
-                              setModalType("department");
-                            }}
+                            onClick={() =>
+                              handleOpenDepartmentModal(
+                                user
+                              )
+                            }
                           >
                             Dept
                           </Button>
                         )}
-                        {u.role !== "ADMIN" && (
+
+                        {/* Activate / Deactivate */}
+                        {user.role !== "ADMIN" && (
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => {
-                              setSelectedUser(u);
-                              setModalType("status");
-                            }}
+                            onClick={() =>
+                              handleOpenStatusModal(
+                                user
+                              )
+                            }
                           >
-                            {u.is_active ? "Deactivate" : "Activate"}
+                            {user.is_active
+                              ? "Deactivate"
+                              : "Activate"}
                           </Button>
                         )}
                       </div>
@@ -206,76 +669,163 @@ export const AdminUsers: React.FC<AdminUsersProps> = ({ onNavigate }) => {
         )}
       </Card>
 
-      {/* Modal for User Management Actions */}
+      {/* ==================================================== */}
+      {/* User Management Modal */}
+      {/* ==================================================== */}
+
       <Modal
         isOpen={!!modalType}
-        onClose={() => {
-          setModalType(null);
-          setSelectedUser(null);
-        }}
-        title={`Modify ${selectedUser?.name}`}
+        onClose={closeModal}
+        title={`Modify ${selectedUser?.name || "User"}`}
         footer={
           <>
             <Button
               variant="outline"
-              onClick={() => {
-                setModalType(null);
-                setSelectedUser(null);
-              }}
+              onClick={closeModal}
+              disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button variant="primary" onClick={handleConfirmAction}>
+
+            <Button
+              variant="primary"
+              onClick={handleConfirmAction}
+              isLoading={isSubmitting}
+              disabled={!selectedUser}
+            >
               Confirm Action
             </Button>
           </>
         }
       >
+        {/* ================================================== */}
+        {/* Role Modal */}
+        {/* ================================================== */}
+
         {modalType === "role" && (
           <div>
-            <p style={{ fontSize: "0.875rem", marginBottom: 12 }}>
-              Select new role for <strong>{selectedUser?.name}</strong>:
+            <p
+              style={{
+                fontSize: "0.875rem",
+                marginBottom: 12,
+              }}
+            >
+              Select new role for{" "}
+              <strong>
+                {selectedUser?.name}
+              </strong>
+              :
             </p>
+
             <select
               className="rx-select"
               value={newRole}
-              onChange={(e) => setNewRole(e.target.value)}
-              style={{ width: "100%" }}
+              onChange={(event) =>
+                setNewRole(
+                  event.target.value as UserRole
+                )
+              }
+              style={{
+                width: "100%",
+              }}
+              disabled={isSubmitting}
             >
-              <option value="STUDENT">STUDENT</option>
-              <option value="STAFF">STAFF</option>
+              <option value="STUDENT">
+                STUDENT
+              </option>
+
+              <option value="STAFF">
+                STAFF
+              </option>
             </select>
           </div>
         )}
 
+        {/* ================================================== */}
+        {/* Status Modal */}
+        {/* ================================================== */}
+
         {modalType === "status" && (
           <div>
-            <p style={{ fontSize: "0.875rem" }}>
+            <p
+              style={{
+                fontSize: "0.875rem",
+              }}
+            >
               Are you sure you want to{" "}
-              <strong>{selectedUser?.is_active ? "deactivate" : "activate"}</strong>{" "}
-              the account for <strong>{selectedUser?.name}</strong>?
+              <strong>
+                {selectedUser?.is_active
+                  ? "deactivate"
+                  : "activate"}
+              </strong>{" "}
+              the account for{" "}
+              <strong>
+                {selectedUser?.name}
+              </strong>
+              ?
             </p>
           </div>
         )}
 
+        {/* ================================================== */}
+        {/* Department Modal */}
+        {/* ================================================== */}
+
         {modalType === "department" && (
           <div>
-            <p style={{ fontSize: "0.875rem", marginBottom: 12 }}>
-              Assign department for staff <strong>{selectedUser?.name}</strong>:
+            <p
+              style={{
+                fontSize: "0.875rem",
+                marginBottom: 12,
+              }}
+            >
+              Assign department for staff{" "}
+              <strong>
+                {selectedUser?.name}
+              </strong>
+              :
             </p>
+
             <select
               className="rx-select"
               value={newDepartment}
-              onChange={(e) => setNewDepartment(e.target.value)}
-              style={{ width: "100%" }}
+              onChange={(event) =>
+                setNewDepartment(
+                  event.target.value
+                )
+              }
+              style={{
+                width: "100%",
+              }}
+              disabled={isSubmitting}
             >
-              <option value="IT">IT</option>
-              <option value="ELECTRICAL">ELECTRICAL</option>
-              <option value="MAINTENANCE">MAINTENANCE</option>
-              <option value="TRANSPORT">TRANSPORT</option>
-              <option value="ACADEMICS">ACADEMICS</option>
-              <option value="HOSTEL">HOSTEL</option>
-              <option value="SECURITY">SECURITY</option>
+              <option value="IT">
+                IT
+              </option>
+
+              <option value="ELECTRICAL">
+                ELECTRICAL
+              </option>
+
+              <option value="MAINTENANCE">
+                MAINTENANCE
+              </option>
+
+              <option value="TRANSPORT">
+                TRANSPORT
+              </option>
+
+              <option value="ACADEMICS">
+                ACADEMICS
+              </option>
+
+              <option value="HOSTEL">
+                HOSTEL
+              </option>
+
+              <option value="SECURITY">
+                SECURITY
+              </option>
             </select>
           </div>
         )}

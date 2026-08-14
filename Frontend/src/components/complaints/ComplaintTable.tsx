@@ -95,13 +95,13 @@ export const ComplaintTable: React.FC<ComplaintTableProps> = ({
                         View
                       </Button>
                     )}
-                    {onAssign && (
+                    {onAssign && c.status !== "RESOLVED" && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => onAssign(c)}
                       >
-                        Assign
+                        {c.assigned_to ? "Reassign" : "Assign"}
                       </Button>
                     )}
                     {onUpdateStatus && c.status !== "RESOLVED" && (

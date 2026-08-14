@@ -239,6 +239,19 @@ def assign_complaint(
     if not ObjectId.is_valid(complaint_id):
         return None
 
+    complaint = complaints_collection.find_one(
+        {"_id": ObjectId(complaint_id)}
+    )
+
+    if complaint is None:
+        return None
+
+    # Resolved complaints are closed and cannot be reassigned
+    if complaint.get("status") == "RESOLVED":
+        raise ValueError(
+            "Resolved complaints cannot be reassigned"
+        )
+
     result = complaints_collection.update_one(
         {"_id": ObjectId(complaint_id)},
         {

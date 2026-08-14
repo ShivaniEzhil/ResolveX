@@ -254,6 +254,22 @@ def assign_complaint_endpoint(
             detail="Only administrators can assign complaints",
         )
 
+    # Find the complaint first
+    complaint = get_complaint_by_id(complaint_id)
+
+    if complaint is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Complaint not found",
+        )
+
+    # Resolved complaints are closed and cannot be reassigned
+    if complaint.get("status") == "RESOLVED":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Resolved complaints cannot be reassigned",
+        )
+
     # Find the user who should receive the complaint
     staff_user = get_user_by_id(assignment.staff_id)
 
@@ -268,6 +284,13 @@ def assign_complaint_endpoint(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Complaint can only be assigned to a staff member",
+        )
+
+    # Make sure the staff member is active
+    if not staff_user.get("is_active", False):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Complaint cannot be assigned to an inactive staff member",
         )
 
     # Assign the complaint
