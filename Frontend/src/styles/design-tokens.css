@@ -1,0 +1,116 @@
+/* ===========================================
+   ResolveX Design Tokens
+   =========================================== */
+
+:root {
+  /* Primary */
+  --rx-primary: #4F46E5;
+  --rx-primary-hover: #4338CA;
+  --rx-primary-light: #EEF2FF;
+  --rx-primary-border: #C7D2FE;
+
+  /* Gray Scale */
+  --rx-gray-50: #F9FAFB;
+  --rx-gray-100: #F3F4F6;
+  --rx-gray-200: #E5E7EB;
+  --rx-gray-300: #D1D5DB;
+  --rx-gray-400: #9CA3AF;
+  --rx-gray-500: #6B7280;
+  --rx-gray-600: #4B5563;
+  --rx-gray-700: #374151;
+  --rx-gray-800: #1F2937;
+  --rx-gray-900: #111827;
+  --rx-gray-950: #030712;
+
+  /* Status Colors */
+  --rx-status-submitted: #3B82F6;
+  --rx-status-submitted-bg: #EFF6FF;
+  --rx-status-assigned: #F59E0B;
+  --rx-status-assigned-bg: #FFFBEB;
+  --rx-status-in-progress: #8B5CF6;
+  --rx-status-in-progress-bg: #F5F3FF;
+  --rx-status-resolved: #10B981;
+  --rx-status-resolved-bg: #ECFDF5;
+
+  /* Priority Colors */
+  --rx-priority-low: #64748B;
+  --rx-priority-low-bg: #F8FAFC;
+  --rx-priority-medium: #3B82F6;
+  --rx-priority-medium-bg: #EFF6FF;
+  --rx-priority-high: #F97316;
+  --rx-priority-high-bg: #FFF7ED;
+  --rx-priority-critical: #EF4444;
+  --rx-priority-critical-bg: #FEF2F2;
+
+  /* Semantic */
+  --rx-success: #10B981;
+  --rx-success-bg: #ECFDF5;
+  --rx-warning: #F59E0B;
+  --rx-warning-bg: #FFFBEB;
+  --rx-danger: #EF4444;
+  --rx-danger-bg: #FEF2F2;
+  --rx-info: #3B82F6;
+  --rx-info-bg: #EFF6FF;
+
+  /* Layout */
+  --rx-sidebar-width: 256px;
+  --rx-header-height: 64px;
+  --rx-sidebar-bg: #111827;
+  --rx-sidebar-text: #9CA3AF;
+  --rx-sidebar-active: #374151;
+  --rx-sidebar-hover: #1F2937;
+
+  /* Surfaces */
+  --rx-bg: #F9FAFB;
+  --rx-surface: #FFFFFF;
+  --rx-surface-hover: #F9FAFB;
+  --rx-border: #E5E7EB;
+  --rx-border-light: #F3F4F6;
+
+  /* Text */
+  --rx-text-primary: #111827;
+  --rx-text-secondary: #6B7280;
+  --rx-text-muted: #9CA3AF;
+  --rx-text-inverse: #FFFFFF;
+
+  /* Typography */
+  --rx-font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --rx-font-mono: ui-monospace, Consolas, monospace;
+
+  /* Spacing */
+  --rx-space-1: 4px;
+  --rx-space-2: 8px;
+  --rx-space-3: 12px;
+  --rx-space-4: 16px;
+  --rx-space-5: 20px;
+  --rx-space-6: 24px;
+  --rx-space-8: 32px;
+  --rx-space-10: 40px;
+  --rx-space-12: 48px;
+
+  /* Border Radius */
+  --rx-radius-sm: 4px;
+  --rx-radius-md: 8px;
+  --rx-radius-lg: 12px;
+  --rx-radius-xl: 16px;
+  --rx-radius-full: 9999px;
+
+  /* Shadows */
+  --rx-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --rx-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --rx-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --rx-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --rx-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* Transitions */
+  --rx-transition-fast: 150ms ease;
+  --rx-transition-base: 200ms ease;
+  --rx-transition-slow: 300ms ease;
+
+  /* Z-Index */
+  --rx-z-dropdown: 100;
+  --rx-z-sticky: 200;
+  --rx-z-overlay: 300;
+  --rx-z-modal: 400;
+  --rx-z-toast: 500;
+}

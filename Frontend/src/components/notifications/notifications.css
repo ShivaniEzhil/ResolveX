@@ -1,0 +1,64 @@
+/* ===========================================
+   Notification Components CSS
+   =========================================== */
+
+.rx-notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--rx-space-2);
+}
+
+.rx-notif-item {
+  display: flex;
+  gap: var(--rx-space-4);
+  padding: var(--rx-space-4);
+  border-radius: var(--rx-radius-md);
+  border: 1px solid var(--rx-border-light);
+  background: var(--rx-surface);
+  transition: all var(--rx-transition-fast);
+}
+
+.rx-notif-item--unread {
+  background: var(--rx-primary-light);
+  border-color: var(--rx-primary-border);
+}
+
+.rx-notif-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--rx-gray-100);
+  color: var(--rx-gray-600);
+  flex-shrink: 0;
+}
+
+.rx-notif-item--unread .rx-notif-icon {
+  background: var(--rx-primary);
+  color: white;
+}
+
+.rx-notif-content {
+  flex: 1;
+}
+
+.rx-notif-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--rx-text-primary);
+}
+
+.rx-notif-msg {
+  font-size: 0.8125rem;
+  color: var(--rx-text-secondary);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+.rx-notif-time {
+  font-size: 0.75rem;
+  color: var(--rx-text-muted);
+  margin-top: 4px;
+}

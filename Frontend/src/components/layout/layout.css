@@ -1,0 +1,333 @@
+/* ===========================================
+   Layout Components
+   =========================================== */
+
+/* Dashboard Layout Shell */
+.rx-layout {
+  display: flex;
+  min-height: 100vh;
+  background: var(--rx-bg);
+}
+
+.rx-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  margin-left: var(--rx-sidebar-width);
+}
+
+.rx-content {
+  flex: 1;
+  padding: var(--rx-space-8);
+  overflow-y: auto;
+}
+
+/* ===========================================
+   Sidebar
+   =========================================== */
+
+.rx-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--rx-sidebar-width);
+  background: var(--rx-sidebar-bg);
+  color: var(--rx-sidebar-text);
+  display: flex;
+  flex-direction: column;
+  z-index: var(--rx-z-sticky);
+  overflow-y: auto;
+}
+
+.rx-sidebar-overlay {
+  display: none;
+}
+
+.rx-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--rx-space-3);
+  padding: var(--rx-space-6) var(--rx-space-5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rx-sidebar-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--rx-primary);
+  color: white;
+  font-weight: 700;
+  font-size: 1.125rem;
+  border-radius: var(--rx-radius-md);
+  flex-shrink: 0;
+}
+
+.rx-sidebar-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: white;
+  letter-spacing: -0.02em;
+}
+
+.rx-sidebar-nav {
+  flex: 1;
+  padding: var(--rx-space-4) var(--rx-space-3);
+}
+
+.rx-sidebar-section-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--rx-gray-500);
+  padding: var(--rx-space-4) var(--rx-space-3) var(--rx-space-2);
+}
+
+.rx-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: var(--rx-space-3);
+  width: 100%;
+  padding: var(--rx-space-3);
+  border: none;
+  background: transparent;
+  color: var(--rx-sidebar-text);
+  font-size: 0.875rem;
+  font-family: var(--rx-font-sans);
+  text-align: left;
+  border-radius: var(--rx-radius-md);
+  cursor: pointer;
+  transition: all var(--rx-transition-fast);
+  margin-bottom: 2px;
+}
+
+.rx-sidebar-link:hover {
+  background: var(--rx-sidebar-hover);
+  color: white;
+}
+
+.rx-sidebar-link--active {
+  background: var(--rx-sidebar-active);
+  color: white;
+}
+
+.rx-sidebar-link-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.rx-sidebar-link-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.rx-sidebar-link-text {
+  flex: 1;
+}
+
+.rx-sidebar-footer {
+  padding: var(--rx-space-3);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ===========================================
+   Header
+   =========================================== */
+
+.rx-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--rx-space-4) var(--rx-space-8);
+  background: var(--rx-surface);
+  border-bottom: 1px solid var(--rx-border);
+  min-height: var(--rx-header-height);
+  position: sticky;
+  top: 0;
+  z-index: var(--rx-z-sticky);
+}
+
+.rx-header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--rx-space-4);
+}
+
+.rx-header-menu-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: var(--rx-text-primary);
+  cursor: pointer;
+  border-radius: var(--rx-radius-md);
+  transition: background var(--rx-transition-fast);
+}
+
+.rx-header-menu-btn:hover {
+  background: var(--rx-gray-100);
+}
+
+.rx-header-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--rx-text-primary);
+  margin: 0;
+}
+
+.rx-header-subtitle {
+  font-size: 0.8125rem;
+  color: var(--rx-text-secondary);
+  margin: 2px 0 0;
+}
+
+.rx-header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--rx-space-4);
+}
+
+.rx-header-notification-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: var(--rx-text-secondary);
+  cursor: pointer;
+  border-radius: var(--rx-radius-md);
+  transition: all var(--rx-transition-fast);
+}
+
+.rx-header-notification-btn:hover {
+  background: var(--rx-gray-100);
+  color: var(--rx-text-primary);
+}
+
+.rx-header-notification-btn svg {
+  width: 22px;
+  height: 22px;
+}
+
+.rx-header-notification-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  background: var(--rx-danger);
+  color: white;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  border-radius: var(--rx-radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rx-header-user {
+  display: flex;
+  align-items: center;
+  gap: var(--rx-space-3);
+}
+
+.rx-header-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: var(--rx-primary-light);
+  color: var(--rx-primary);
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: var(--rx-radius-full);
+  flex-shrink: 0;
+}
+
+.rx-header-user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.rx-header-user-name {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--rx-text-primary);
+  line-height: 1.2;
+}
+
+.rx-header-user-role {
+  font-size: 0.75rem;
+  color: var(--rx-text-muted);
+  line-height: 1.2;
+}
+
+/* ===========================================
+   Responsive
+   =========================================== */
+
+@media (max-width: 1024px) {
+  .rx-content {
+    padding: var(--rx-space-6);
+  }
+
+  .rx-header {
+    padding: var(--rx-space-4) var(--rx-space-6);
+  }
+}
+
+@media (max-width: 768px) {
+  .rx-sidebar {
+    transform: translateX(-100%);
+    transition: transform var(--rx-transition-slow);
+  }
+
+  .rx-sidebar--open {
+    transform: translateX(0);
+  }
+
+  .rx-sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: calc(var(--rx-z-sticky) - 1);
+  }
+
+  .rx-main {
+    margin-left: 0;
+  }
+
+  .rx-header-menu-btn {
+    display: flex;
+  }
+
+  .rx-content {
+    padding: var(--rx-space-4);
+  }
+
+  .rx-header {
+    padding: var(--rx-space-3) var(--rx-space-4);
+  }
+
+  .rx-header-user-info {
+    display: none;
+  }
+}

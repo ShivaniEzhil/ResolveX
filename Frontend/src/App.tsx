@@ -8,7 +8,7 @@ import {
 import Login from "./pages/Login";
 import Unauthorized from "./pages/Unauthorized";
 
-import AdminDashboard from "./pages/AdminDashboard";
+import AdminContainer from "./pages/admin/AdminContainer";
 import StaffDashboard from "./pages/StaffDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 
@@ -27,17 +27,17 @@ function App() {
 
         {/* Admin */}
         <Route
-          path="/admin"
+          path="/admin/*"
           element={
             <ProtectedRoute allowedRoles={["ADMIN"]}>
-              <AdminDashboard />
+              <AdminContainer />
             </ProtectedRoute>
           }
         />
 
         {/* Staff */}
         <Route
-          path="/staff"
+          path="/staff/*"
           element={
             <ProtectedRoute allowedRoles={["STAFF"]}>
               <StaffDashboard />
@@ -47,7 +47,7 @@ function App() {
 
         {/* Student */}
         <Route
-          path="/student"
+          path="/student/*"
           element={
             <ProtectedRoute allowedRoles={["STUDENT"]}>
               <StudentDashboard />

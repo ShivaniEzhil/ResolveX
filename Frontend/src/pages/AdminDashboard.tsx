@@ -1,19 +1,14 @@
 import { useEffect, useState } from "react";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-
-import { useAuth } from "../context/AuthContext";
+import DashboardLayout from "../components/layout/DashboardLayout";
+import StatCard from "../components/dashboard/StatCard";
+import StatusChart from "../components/dashboard/StatusChart";
+import PriorityChart from "../components/dashboard/PriorityChart";
+import DepartmentChart from "../components/dashboard/DepartmentChart";
+import StaffWorkloadTable from "../components/dashboard/StaffWorkloadTable";
+import RecentComplaints from "../components/dashboard/RecentComplaints";
+import RecentActivity from "../components/dashboard/RecentActivity";
+import LoadingState from "../components/common/LoadingState";
+import ErrorState from "../components/common/ErrorState";
 
 import {
   getComplaintStatistics,
@@ -31,456 +26,159 @@ import type {
 
 import "./AdminDashboard.css";
 
-function AdminDashboard() {
-  const { user, logout } = useAuth();
+interface AdminDashboardProps {
+  onNavigateTab?: (tabId: string) => void;
+  onSelectComplaint?: (complaint: Complaint) => void;
+}
 
-  const [statistics, setStatistics] =
-    useState<ComplaintStatistics | null>(null);
-
-  const [staffWorkload, setStaffWorkload] =
-    useState<StaffWorkload[]>([]);
-
-  const [recentComplaints, setRecentComplaints] =
-    useState<Complaint[]>([]);
-
-  const [recentActivity, setRecentActivity] =
-    useState<AuditActivity[]>([]);
+function AdminDashboard({ onNavigateTab, onSelectComplaint }: AdminDashboardProps) {
+  const [statistics, setStatistics] = useState<ComplaintStatistics | null>(null);
+  const [staffWorkload, setStaffWorkload] = useState<StaffWorkload[]>([]);
+  const [recentComplaints, setRecentComplaints] = useState<Complaint[]>([]);
+  const [recentActivity, setRecentActivity] = useState<AuditActivity[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const loadDashboard = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const [
+        statisticsData,
+        workloadData,
+        complaintsData,
+        activityData,
+      ] = await Promise.all([
+        getComplaintStatistics(),
+        getStaffWorkload(),
+        getRecentComplaints(10),
+        getRecentActivity(10),
+      ]);
+
+      setStatistics(statisticsData);
+      setStaffWorkload(workloadData);
+      setRecentComplaints(complaintsData);
+      setRecentActivity(activityData);
+    } catch (err) {
+      console.error(err);
+      setError("Unable to load live backend dashboard analytics.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const loadDashboard = async () => {
-      try {
-        setLoading(true);
-
-        const [
-          statisticsData,
-          workloadData,
-          complaintsData,
-          activityData,
-        ] = await Promise.all([
-          getComplaintStatistics(),
-          getStaffWorkload(),
-          getRecentComplaints(10),
-          getRecentActivity(10),
-        ]);
-
-        setStatistics(statisticsData);
-        setStaffWorkload(workloadData);
-        setRecentComplaints(complaintsData);
-        setRecentActivity(activityData);
-      } catch (err) {
-        console.error(err);
-        setError("Unable to load dashboard data.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadDashboard();
   }, []);
 
   if (loading) {
     return (
-      <div className="dashboard-message">
-        Loading dashboard...
-      </div>
+      <DashboardLayout role="ADMIN" title="Admin Dashboard" activeItem="dashboard">
+        <LoadingState message="Loading dashboard analytics from backend API..." />
+      </DashboardLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="dashboard-message">
-        {error}
-      </div>
+      <DashboardLayout role="ADMIN" title="Admin Dashboard" activeItem="dashboard">
+        <ErrorState message={error} onRetry={loadDashboard} />
+      </DashboardLayout>
     );
   }
 
   const statusData = statistics
     ? [
-        {
-          name: "Submitted",
-          value: statistics.summary.submitted,
-        },
-        {
-          name: "Assigned",
-          value: statistics.summary.assigned,
-        },
-        {
-          name: "In Progress",
-          value: statistics.summary.in_progress,
-        },
-        {
-          name: "Resolved",
-          value: statistics.summary.resolved,
-        },
+        { name: "Submitted", value: statistics.summary.submitted },
+        { name: "Assigned", value: statistics.summary.assigned },
+        { name: "In Progress", value: statistics.summary.in_progress },
+        { name: "Resolved", value: statistics.summary.resolved },
       ]
     : [];
 
   const priorityData = statistics
-    ? Object.entries(statistics.by_priority).map(
-        ([name, value]) => ({
-          name,
-          value,
-        }),
-      )
+    ? Object.entries(statistics.by_priority).map(([name, value]) => ({
+        name,
+        value,
+      }))
     : [];
 
   const departmentData = statistics
-    ? Object.entries(statistics.by_department).map(
-        ([name, value]) => ({
-          name,
-          value,
-        }),
-      )
+    ? Object.entries(statistics.by_department).map(([name, value]) => ({
+        name,
+        value,
+      }))
     : [];
 
   return (
-    <div className="admin-layout">
-
-      {/* Sidebar */}
-      <aside className="admin-sidebar">
-        <div className="admin-logo">
-          ResolveX
+    <DashboardLayout
+      role="ADMIN"
+      title="Admin Overview Dashboard"
+      subtitle="Live platform metrics, automated routing stats, and system activity"
+      activeItem="dashboard"
+      onNavigate={onNavigateTab}
+    >
+      {/* KPI Cards */}
+      {statistics && (
+        <div className="rx-stat-grid">
+          <StatCard
+            label="Total Complaints"
+            value={statistics.summary.total}
+          />
+          <StatCard
+            label="Submitted"
+            value={statistics.summary.submitted}
+            iconBg="var(--rx-status-submitted-bg)"
+            iconColor="var(--rx-status-submitted)"
+          />
+          <StatCard
+            label="Assigned"
+            value={statistics.summary.assigned}
+            iconBg="var(--rx-status-assigned-bg)"
+            iconColor="var(--rx-status-assigned)"
+          />
+          <StatCard
+            label="In Progress"
+            value={statistics.summary.in_progress}
+            iconBg="var(--rx-status-in-progress-bg)"
+            iconColor="var(--rx-status-in-progress)"
+          />
+          <StatCard
+            label="Resolved"
+            value={statistics.summary.resolved}
+            iconBg="var(--rx-status-resolved-bg)"
+            iconColor="var(--rx-status-resolved)"
+          />
         </div>
+      )}
 
-        <div className="sidebar-label">
-          Management
-        </div>
+      {/* Charts Grid */}
+      <div className="rx-chart-grid">
+        <StatusChart data={statusData} />
+        <PriorityChart data={priorityData} />
+      </div>
 
-        <button className="sidebar-item active">
-          Dashboard
-        </button>
+      <div style={{ marginBottom: 24 }}>
+        <DepartmentChart data={departmentData} />
+      </div>
 
-        <button className="sidebar-item">
-          Complaints
-        </button>
+      {/* Staff Workload */}
+      <div style={{ marginBottom: 24 }}>
+        <StaffWorkloadTable staffWorkload={staffWorkload} />
+      </div>
 
-        <button className="sidebar-item">
-          Users
-        </button>
-
-        <button className="sidebar-item">
-          Analytics
-        </button>
-
-        <div className="sidebar-label">
-          System
-        </div>
-
-        <button className="sidebar-item">
-          Notifications
-        </button>
-
-        <button className="sidebar-item">
-          Audit Logs
-        </button>
-      </aside>
-
-      {/* Main */}
-      <main className="admin-main">
-
-        {/* Header */}
-        <header className="admin-header">
-          <div>
-            <h1>Dashboard</h1>
-
-            <p>
-              Welcome back, {user?.name}
-            </p>
-          </div>
-
-          <button
-            className="logout-button"
-            onClick={logout}
-          >
-            Logout
-          </button>
-        </header>
-
-        {/* KPI Cards */}
-        {statistics && (
-          <section className="kpi-grid">
-
-            <div className="kpi-card">
-              <h3>Total Complaints</h3>
-              <div className="kpi-value">
-                {statistics.summary.total}
-              </div>
-            </div>
-
-            <div className="kpi-card">
-              <h3>Submitted</h3>
-              <div className="kpi-value">
-                {statistics.summary.submitted}
-              </div>
-            </div>
-
-            <div className="kpi-card">
-              <h3>Assigned</h3>
-              <div className="kpi-value">
-                {statistics.summary.assigned}
-              </div>
-            </div>
-
-            <div className="kpi-card">
-              <h3>In Progress</h3>
-              <div className="kpi-value">
-                {statistics.summary.in_progress}
-              </div>
-            </div>
-
-            <div className="kpi-card">
-              <h3>Resolved</h3>
-              <div className="kpi-value">
-                {statistics.summary.resolved}
-              </div>
-            </div>
-
-          </section>
-        )}
-
-        {/* Charts */}
-        <section className="chart-grid">
-
-          {/* Complaint Status */}
-          <div className="dashboard-card">
-            <h2>Complaint Status</h2>
-
-            <div className="chart-container">
-              <ResponsiveContainer
-                width="100%"
-                height="100%"
-              >
-                <PieChart>
-                  <Pie
-                    data={statusData}
-                    dataKey="value"
-                    nameKey="name"
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    label
-                  >
-                    {statusData.map(
-                      (_, index) => (
-                        <Cell
-                          key={index}
-                        />
-                      ),
-                    )}
-                  </Pie>
-
-                  <Tooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          {/* Priority */}
-          <div className="dashboard-card">
-            <h2>Priority Distribution</h2>
-
-            <div className="chart-container">
-              <ResponsiveContainer
-                width="100%"
-                height="100%"
-              >
-                <BarChart
-                  data={priorityData}
-                >
-                  <CartesianGrid
-                    strokeDasharray="3 3"
-                  />
-
-                  <XAxis dataKey="name" />
-
-                  <YAxis allowDecimals={false} />
-
-                  <Tooltip />
-
-                  <Bar dataKey="value">
-                    {priorityData.map(
-                      (_, index) => (
-                        <Cell
-                          key={index}
-                        />
-                      ),
-                    )}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-        </section>
-
-        {/* Department */}
-        <section className="dashboard-card">
-          <h2>Complaints by Department</h2>
-
-          <div className="chart-container">
-            <ResponsiveContainer
-              width="100%"
-              height="100%"
-            >
-              <BarChart
-                data={departmentData}
-              >
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                />
-
-                <XAxis dataKey="name" />
-
-                <YAxis allowDecimals={false} />
-
-                <Tooltip />
-
-                <Bar dataKey="value">
-                  {departmentData.map(
-                    (_, index) => (
-                      <Cell
-                        key={index}
-                      />
-                    ),
-                  )}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
-
-        {/* Staff Workload */}
-        <section className="table-card">
-          <h2>Staff Workload</h2>
-
-          {staffWorkload.length === 0 ? (
-            <p>No active staff members found.</p>
-          ) : (
-            <table className="dashboard-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Department</th>
-                  <th>Assigned</th>
-                  <th>In Progress</th>
-                  <th>Resolved</th>
-                  <th>Active Workload</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {staffWorkload.map(
-                  (staff) => (
-                    <tr key={staff.staff_id}>
-                      <td>{staff.name}</td>
-
-                      <td>
-                        {staff.department ?? "-"}
-                      </td>
-
-                      <td>
-                        {staff.assigned}
-                      </td>
-
-                      <td>
-                        {staff.in_progress}
-                      </td>
-
-                      <td>
-                        {staff.resolved}
-                      </td>
-
-                      <td>
-                        {staff.active_workload}
-                      </td>
-                    </tr>
-                  ),
-                )}
-              </tbody>
-            </table>
-          )}
-        </section>
-
-        {/* Recent Complaints */}
-        <section className="table-card">
-          <h2>Recent Complaints</h2>
-
-          {recentComplaints.length === 0 ? (
-            <p>No complaints found.</p>
-          ) : (
-            <table className="dashboard-table">
-              <thead>
-                <tr>
-                  <th>Title</th>
-                  <th>Status</th>
-                  <th>Priority</th>
-                  <th>Department</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {recentComplaints.map(
-                  (complaint) => (
-                    <tr
-                      key={complaint.id}
-                    >
-                      <td>
-                        {complaint.title}
-                      </td>
-
-                      <td>
-                        {complaint.status}
-                      </td>
-
-                      <td>
-                        {complaint.priority}
-                      </td>
-
-                      <td>
-                        {complaint.department}
-                      </td>
-                    </tr>
-                  ),
-                )}
-              </tbody>
-            </table>
-          )}
-        </section>
-
-        {/* Recent Activity */}
-        <section className="table-card">
-          <h2>Recent Activity</h2>
-
-          {recentActivity.length === 0 ? (
-            <p>No recent activity.</p>
-          ) : (
-            <ul className="activity-list">
-              {recentActivity.map(
-                (activity) => (
-                  <li
-                    key={activity.id}
-                    className="activity-item"
-                  >
-                    <div className="activity-action">
-                      {activity.action}
-                    </div>
-
-                    <div className="activity-description">
-                      {activity.description}
-                    </div>
-                  </li>
-                ),
-              )}
-            </ul>
-          )}
-        </section>
-
-      </main>
-    </div>
+      {/* Recent Complaints & Activity */}
+      <div className="rx-chart-grid">
+        <RecentComplaints
+          complaints={recentComplaints}
+          onViewAll={() => onNavigateTab && onNavigateTab("complaints")}
+          onSelectComplaint={(c) => onSelectComplaint && onSelectComplaint(c)}
+        />
+        <RecentActivity activity={recentActivity} />
+      </div>
+    </DashboardLayout>
   );
 }
 

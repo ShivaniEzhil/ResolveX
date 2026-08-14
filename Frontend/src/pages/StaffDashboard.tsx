@@ -1,10 +1,3 @@
-function StaffDashboard() {
-  return (
-    <div>
-      <h1>Staff Dashboard</h1>
-      <p>Welcome, Staff Member.</p>
-    </div>
-  );
-}
+import StaffContainer from "./staff/StaffContainer";
 
-export default StaffDashboard;
+export default StaffContainer;
