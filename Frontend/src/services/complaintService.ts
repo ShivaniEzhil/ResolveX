@@ -96,3 +96,11 @@ export async function updateComplaintStatus(
 
   return response.data;
 }
+
+export async function getComplaintResponses(complaintId: string) {
+  const response = await api.get(
+    `/complaints/${complaintId}/responses`
+  );
+
+  return response.data;
+}

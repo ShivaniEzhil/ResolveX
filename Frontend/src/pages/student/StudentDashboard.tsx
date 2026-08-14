@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import StatCard from "../../components/dashboard/StatCard";
 import RecentComplaints from "../../components/dashboard/RecentComplaints";
 import Card from "../../components/common/Card";
 import Button from "../../components/common/Button";
-import { MOCK_COMPLAINTS } from "../../data/mockData";
+import { getComplaints } from "../../services/complaintService";
 import type { ComplaintItem } from "../../types/complaints";
 import "../../components/dashboard/dashboard.css";
 
@@ -17,12 +17,34 @@ export const StudentDashboardPage: React.FC<StudentDashboardProps> = ({
   onNavigateTab,
   onSelectComplaint,
 }) => {
-  const myComplaints = MOCK_COMPLAINTS.filter((c) => c.user_id === "usr-student-1" || true);
-  const submittedCount = myComplaints.filter((c) => c.status === "SUBMITTED").length;
-  const inProgressCount = myComplaints.filter(
+  const [complaints, setComplaints] = useState<ComplaintItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const loadComplaints = async () => {
+      setIsLoading(true);
+      setError("");
+
+      try {
+        const result = await getComplaints({ limit: 100 });
+        setComplaints(result.complaints || []);
+      } catch (err) {
+        console.error("Failed to load complaints for dashboard:", err);
+        setError("Unable to load complaints summary.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadComplaints();
+  }, []);
+
+  const submittedCount = complaints.filter((c) => c.status === "SUBMITTED").length;
+  const inProgressCount = complaints.filter(
     (c) => c.status === "ASSIGNED" || c.status === "IN_PROGRESS"
   ).length;
-  const resolvedCount = myComplaints.filter((c) => c.status === "RESOLVED").length;
+  const resolvedCount = complaints.filter((c) => c.status === "RESOLVED").length;
 
   return (
     <DashboardLayout
@@ -69,7 +91,7 @@ export const StudentDashboardPage: React.FC<StudentDashboardProps> = ({
       <div className="rx-stat-grid">
         <StatCard
           label="Total Submitted"
-          value={myComplaints.length}
+          value={complaints.length}
         />
         <StatCard
           label="Pending Review"
@@ -93,12 +115,26 @@ export const StudentDashboardPage: React.FC<StudentDashboardProps> = ({
 
       {/* Recent My Complaints Table */}
       <div style={{ marginBottom: 24 }}>
-        <RecentComplaints
-          title="My Recent Complaints"
-          complaints={myComplaints.slice(0, 5)}
-          onViewAll={() => onNavigateTab && onNavigateTab("my-complaints")}
-          onSelectComplaint={onSelectComplaint}
-        />
+        {isLoading ? (
+          <Card title="My Recent Complaints">
+            <div style={{ padding: 30, textAlign: "center" }}>
+              Loading recent complaints...
+            </div>
+          </Card>
+        ) : error ? (
+          <Card title="My Recent Complaints">
+            <div style={{ padding: 30, textAlign: "center", color: "var(--rx-danger)" }}>
+              {error}
+            </div>
+          </Card>
+        ) : (
+          <RecentComplaints
+            title="My Recent Complaints"
+            complaints={complaints.slice(0, 5)}
+            onViewAll={() => onNavigateTab && onNavigateTab("my-complaints")}
+            onSelectComplaint={onSelectComplaint}
+          />
+        )}
       </div>
 
       {/* AI Assistance Tip */}

@@ -31,7 +31,6 @@ export const StudentContainer: React.FC = () => {
         return (
           <SubmitComplaint
             onNavigateTab={(id) => setActiveTab(id)}
-            onSubmitSuccess={() => setActiveTab("my-complaints")}
           />
         );
       case "my-complaints":

@@ -3,15 +3,14 @@ import DashboardLayout from "../../components/layout/DashboardLayout";
 import Card from "../../components/common/Card";
 import Button from "../../components/common/Button";
 import { createComplaint } from "../../services/complaintService";
+import type { ComplaintItem } from "../../types/complaints";
 
 interface SubmitComplaintProps {
   onNavigateTab?: (id: string) => void;
-  onSubmitSuccess?: () => void;
 }
 
 export const SubmitComplaint: React.FC<SubmitComplaintProps> = ({
   onNavigateTab,
-  onSubmitSuccess,
 }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -21,7 +20,7 @@ export const SubmitComplaint: React.FC<SubmitComplaintProps> = ({
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submittedId, setSubmittedId] = useState("");
   const [error, setError] = useState("");
-  const [submittedComplaint, setSubmittedComplaint] = useState<any>(null);
+  const [submittedComplaint, setSubmittedComplaint] = useState<ComplaintItem | null>(null);
 
   const isTitleValid = title.length >= 5 && title.length <= 150;
   const isDescValid = description.length >= 10 && description.length <= 2000;
@@ -49,9 +48,6 @@ export const SubmitComplaint: React.FC<SubmitComplaintProps> = ({
       setSubmittedId(createdComplaint.id);
       setIsSubmitted(true);
 
-      if (onSubmitSuccess) {
-        onSubmitSuccess();
-      }
     } catch (err) {
       console.error("Complaint submission failed:", err);
 
