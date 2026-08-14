@@ -160,7 +160,6 @@ def get_complaint(
             detail="Complaint not found",
         )
     
-    old_status = complaint.get("status")
 
     if not can_access_complaint(
         complaint,
@@ -312,6 +311,7 @@ def update_status(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Complaint not found",
         )
+    old_status = complaint.get("status")
 
     # Staff can only update complaints assigned to them
     if current_user["role"] == "STAFF":
