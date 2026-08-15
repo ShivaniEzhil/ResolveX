@@ -1,6 +1,6 @@
 import React from "react";
 import type { UserRole } from "../../types/auth";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../context/useAuth";
 import "./layout.css";
 
 export interface NavItem {
