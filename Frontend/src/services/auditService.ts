@@ -7,10 +7,7 @@ export interface GetAuditLogsResponse {
 }
 
 export async function getAuditLogs(): Promise<GetAuditLogsResponse> {
-  const response = await api.get<GetAuditLogsResponse>(
-    "/audit/"
-  );
-
+  const response = await api.get<GetAuditLogsResponse>("/audit/");
   return response.data;
 }
 
