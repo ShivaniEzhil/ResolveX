@@ -207,6 +207,12 @@ def get_complaints_for_user(
                     "$options": "i",
                 }
             },
+            {
+                "complaint_number": {
+                    "$regex": search,
+                    "$options": "i",
+                }
+            },
         ]
 
     # Count before pagination
