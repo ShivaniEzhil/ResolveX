@@ -52,7 +52,7 @@ export const MyComplaints: React.FC<MyComplaintsProps> = ({
     if (
       filters.search &&
       !c.title.toLowerCase().includes(filters.search.toLowerCase()) &&
-      !c.id.toLowerCase().includes(filters.search.toLowerCase())
+      !c.complaint_number.toLowerCase().includes(filters.search.toLowerCase())
     ) {
       return false;
     }
@@ -112,7 +112,7 @@ export const MyComplaints: React.FC<MyComplaintsProps> = ({
           >
             {filteredComplaints.map((c) => (
               <ComplaintCard
-                key={c.id}
+                key={c.complaint_number}
                 complaint={c}
                 onClick={() =>
                   onSelectComplaint && onSelectComplaint(c)

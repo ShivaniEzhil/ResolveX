@@ -270,7 +270,7 @@ export const AdminComplaintDetailsPage: React.FC<
       role="ADMIN"
       title={
         complaint
-          ? `Complaint Details - ${complaint.id}`
+          ? `Complaint Details - ${complaint.complaint_number}`
           : "Complaint Details"
       }
       activeItem="complaints"

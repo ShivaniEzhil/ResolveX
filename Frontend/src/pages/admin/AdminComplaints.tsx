@@ -1,22 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
+
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import ComplaintFilters from "../../components/complaints/ComplaintFilters";
 import ComplaintTable from "../../components/complaints/ComplaintTable";
 import AssignmentModal from "../../components/complaints/AssignmentModal";
+
 import Card from "../../components/common/Card";
 import Pagination from "../../components/common/Pagination";
 import LoadingState from "../../components/common/LoadingState";
 import ErrorState from "../../components/common/ErrorState";
+
 import {
   getComplaints,
   assignComplaint,
 } from "../../services/complaintService";
+
 import { getUsers } from "../../services/userService";
+
 import type {
   ComplaintItem,
   ComplaintFilterState,
 } from "../../types/complaints";
+
 import type { UserManagementItem } from "../../types/users";
 
 interface AdminComplaintsProps {
@@ -53,13 +59,23 @@ export const AdminComplaints: React.FC<
   const [currentPage, setCurrentPage] =
     useState(1);
 
+  const [totalItems, setTotalItems] =
+    useState(0);
+
+  const [totalPages, setTotalPages] =
+    useState(0);
+
   const [isLoading, setIsLoading] =
     useState(true);
 
   const [error, setError] =
     useState("");
 
-  const loadData = async () => {
+  // ============================================================
+  // Load complaints and staff members
+  // ============================================================
+
+  const loadData = useCallback(async () => {
     try {
       setIsLoading(true);
       setError("");
@@ -68,7 +84,19 @@ export const AdminComplaints: React.FC<
         complaintsResult,
         usersResult,
       ] = await Promise.all([
-        getComplaints(),
+        getComplaints({
+          search: filters.search || undefined,
+          status_filter:
+            filters.status || undefined,
+          priority:
+            filters.priority || undefined,
+          department:
+            filters.department || undefined,
+          category:
+            filters.category || undefined,
+          page: currentPage,
+          limit: PAGE_SIZE,
+        }),
         getUsers(),
       ]);
 
@@ -78,23 +106,52 @@ export const AdminComplaints: React.FC<
       const loadedUsers: UserManagementItem[] =
         usersResult.users || [];
 
+      // Create staff ID -> staff name mapping
       const staffMap = new Map(
         loadedUsers
-          .filter((user) => user.role === "STAFF")
-          .map((user) => [user.id, user.name])
+          .filter(
+            (user) => user.role === "STAFF"
+          )
+          .map((user) => [
+            user.id,
+            user.name,
+          ])
       );
 
-      const complaintsWithStaffNames = loadedComplaints.map(
-        (complaint) => ({
-          ...complaint,
-          assignedStaffName: complaint.assigned_to
-            ? staffMap.get(complaint.assigned_to) || complaint.assigned_to
-            : undefined,
-        })
+      // Add staff names for frontend display
+      const complaintsWithStaffNames =
+        loadedComplaints.map(
+          (complaint) => ({
+            ...complaint,
+
+            assignedStaffName:
+              complaint.assigned_to
+                ? staffMap.get(
+                    complaint.assigned_to
+                  ) ||
+                  complaint.assignedStaffName ||
+                  "Staff Member"
+                : undefined,
+          })
+        );
+
+      setComplaints(
+        complaintsWithStaffNames
       );
 
-      setComplaints(complaintsWithStaffNames);
-      setStaffMembers(loadedUsers);
+      setStaffMembers(
+        loadedUsers
+      );
+
+      // Backend pagination information
+      setTotalItems(
+        complaintsResult.total || 0
+      );
+
+      setTotalPages(
+        complaintsResult.total_pages || 0
+      );
+
     } catch (err) {
       console.error(
         "Failed to load admin complaints:",
@@ -102,7 +159,9 @@ export const AdminComplaints: React.FC<
       );
 
       if (axios.isAxiosError(err)) {
-        if (err.response?.status === 403) {
+        if (
+          err.response?.status === 403
+        ) {
           setError(
             "You do not have permission to access complaint management."
           );
@@ -119,76 +178,33 @@ export const AdminComplaints: React.FC<
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [
+    currentPage,
+    filters,
+  ]);
 
   useEffect(() => {
     // API data fetching intentionally updates component state.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadData();
-  }, []);
+  }, [loadData]);
 
-  const filteredComplaints =
-    complaints.filter((complaint) => {
-      if (
-        filters.search &&
-        !complaint.title
-          .toLowerCase()
-          .includes(filters.search.toLowerCase()) &&
-        !complaint.id
-          .toLowerCase()
-          .includes(filters.search.toLowerCase())
-      ) {
-        return false;
-      }
-
-      if (
-        filters.status &&
-        complaint.status !== filters.status
-      ) {
-        return false;
-      }
-
-      if (
-        filters.priority &&
-        complaint.priority !== filters.priority
-      ) {
-        return false;
-      }
-
-      if (
-        filters.department &&
-        complaint.department !== filters.department
-      ) {
-        return false;
-      }
-
-      if (
-        filters.category &&
-        complaint.category !== filters.category
-      ) {
-        return false;
-      }
-
-      return true;
-    });
-
-  const totalPages =
-    Math.ceil(
-      filteredComplaints.length / PAGE_SIZE
-    ) || 1;
-
-  const paginatedComplaints =
-    filteredComplaints.slice(
-      (currentPage - 1) * PAGE_SIZE,
-      currentPage * PAGE_SIZE
-    );
+  // ============================================================
+  // Filters
+  // ============================================================
 
   const handleFilterChange = (
     nextFilters: ComplaintFilterState
   ) => {
     setFilters(nextFilters);
+
+    // Always return to page 1 when filters change.
     setCurrentPage(1);
   };
+
+  // ============================================================
+  // Assignment
+  // ============================================================
 
   const handleAssign = async (
     complaintId: string,
@@ -210,40 +226,59 @@ export const AdminComplaints: React.FC<
 
       const assignedStaff =
         staffMembers.find(
-          (staff) => staff.id === staffId
+          (staff) =>
+            staff.id === staffId
         );
 
-      const updatedComplaintWithStaffName: ComplaintItem = {
-        ...updatedComplaint,
-        assignedStaffName:
-          assignedStaff?.name || staffId,
-      };
+      const updatedComplaintWithStaffName:
+        ComplaintItem = {
+          ...updatedComplaint,
 
-      setComplaints((previous) =>
-        previous.map((complaint) =>
-          complaint.id === complaintId
-            ? updatedComplaintWithStaffName
-            : complaint
-        )
+          assignedStaffName:
+            assignedStaff?.name ||
+            updatedComplaint.assignedStaffName ||
+            "Staff Member",
+        };
+
+      setComplaints(
+        (previous) =>
+          previous.map(
+            (complaint) =>
+              complaint.id ===
+              complaintId
+                ? updatedComplaintWithStaffName
+                : complaint
+          )
       );
 
-      setAssignModalComplaint(null);
+      setAssignModalComplaint(
+        null
+      );
+
     } catch (err) {
       console.error(
         "Failed to assign complaint:",
         err
       );
 
-      if (axios.isAxiosError(err)) {
-        if (err.response?.status === 403) {
+      if (
+        axios.isAxiosError(err)
+      ) {
+        if (
+          err.response?.status === 403
+        ) {
           setError(
             "You do not have permission to assign this complaint."
           );
-        } else if (err.response?.status === 404) {
+        } else if (
+          err.response?.status === 404
+        ) {
           setError(
             "Complaint or staff member not found."
           );
-        } else if (err.response?.status === 400) {
+        } else if (
+          err.response?.status === 400
+        ) {
           setError(
             err.response.data?.detail ||
               "Unable to assign this complaint."
@@ -261,6 +296,10 @@ export const AdminComplaints: React.FC<
     }
   };
 
+  // ============================================================
+  // Loading state
+  // ============================================================
+
   if (isLoading) {
     return (
       <DashboardLayout
@@ -269,12 +308,21 @@ export const AdminComplaints: React.FC<
         activeItem="complaints"
         onNavigate={onNavigate}
       >
-        <LoadingState message="Loading complaints and staff members..." />
+        <LoadingState
+          message="Loading complaints and staff members..."
+        />
       </DashboardLayout>
     );
   }
 
-  if (error && complaints.length === 0) {
+  // ============================================================
+  // Error state
+  // ============================================================
+
+  if (
+    error &&
+    complaints.length === 0
+  ) {
     return (
       <DashboardLayout
         role="ADMIN"
@@ -289,6 +337,10 @@ export const AdminComplaints: React.FC<
       </DashboardLayout>
     );
   }
+
+  // ============================================================
+  // Main UI
+  // ============================================================
 
   return (
     <DashboardLayout
@@ -312,7 +364,7 @@ export const AdminComplaints: React.FC<
       )}
 
       <Card
-        title={`All Complaints (${filteredComplaints.length})`}
+        title={`All Complaints (${totalItems})`}
         subtitle="Manage end-to-end complaint lifecycle and staff assignments"
       >
         <ComplaintFilters
@@ -321,34 +373,52 @@ export const AdminComplaints: React.FC<
         />
 
         <ComplaintTable
-          complaints={paginatedComplaints}
-          onViewDetails={onSelectComplaint}
+          complaints={complaints}
+          onViewDetails={
+            onSelectComplaint
+          }
           onAssign={(complaint) =>
-            setAssignModalComplaint(complaint)
+            setAssignModalComplaint(
+              complaint
+            )
           }
           onUpdateStatus={(complaint) =>
             onSelectComplaint &&
-            onSelectComplaint(complaint)
+            onSelectComplaint(
+              complaint
+            )
           }
         />
 
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
-          totalItems={filteredComplaints.length}
+          totalItems={totalItems}
           pageSize={PAGE_SIZE}
-          onPageChange={setCurrentPage}
+          onPageChange={
+            setCurrentPage
+          }
         />
       </Card>
 
       <AssignmentModal
-        isOpen={!!assignModalComplaint}
-        onClose={() =>
-          setAssignModalComplaint(null)
+        isOpen={
+          !!assignModalComplaint
         }
-        complaint={assignModalComplaint}
-        staffMembers={staffMembers}
-        onAssign={handleAssign}
+        onClose={() =>
+          setAssignModalComplaint(
+            null
+          )
+        }
+        complaint={
+          assignModalComplaint
+        }
+        staffMembers={
+          staffMembers
+        }
+        onAssign={
+          handleAssign
+        }
       />
     </DashboardLayout>
   );

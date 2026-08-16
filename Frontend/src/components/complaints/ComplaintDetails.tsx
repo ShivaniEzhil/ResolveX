@@ -32,7 +32,7 @@ export const ComplaintDetails: React.FC<ComplaintDetailsProps> = ({
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
               <span style={{ fontFamily: "var(--rx-font-mono)", fontSize: "0.875rem", color: "var(--rx-text-muted)" }}>
-                {complaint.id}
+                {complaint.complaint_number}
               </span>
               <PriorityBadge priority={complaint.priority} />
               <StatusBadge status={complaint.status} />

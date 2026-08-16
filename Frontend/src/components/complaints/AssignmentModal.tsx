@@ -37,7 +37,7 @@ export const AssignmentModal: React.FC<AssignmentModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Assign Complaint ${complaint.id}`}
+      title={`Assign Complaint ${complaint.complaint_number}`}
       footer={
         <>
           <Button variant="outline" onClick={onClose}>

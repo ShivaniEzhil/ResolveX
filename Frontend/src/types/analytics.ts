@@ -25,6 +25,7 @@ export interface StaffWorkload {
 
 export interface Complaint {
   id: string;
+  complaint_number: string;
   title: string;
   description: string;
   location: string;

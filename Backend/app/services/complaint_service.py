@@ -1,11 +1,29 @@
 from datetime import datetime, timezone
 from bson import ObjectId
+from pymongo import ReturnDocument
 
 from app.database.mongodb import database
 from app.services.user_service import get_user_by_id
 
 
 complaints_collection = database["complaints"]
+complaint_counters_collection = database["complaint_counters"]
+
+def get_next_complaint_number() -> str:
+    result = complaint_counters_collection.find_one_and_update(
+        {"_id": "complaint_number"},
+        {
+            "$inc": {
+                "sequence": 1,
+            }
+        },
+        upsert=True,
+        return_document=ReturnDocument.AFTER,
+    )
+
+    sequence = result["sequence"]
+
+    return f"CMP-{sequence:04d}"
 
 
 def create_complaint(
@@ -15,8 +33,11 @@ def create_complaint(
 ) -> dict:
     now = datetime.now(timezone.utc)
 
+    complaint_number = get_next_complaint_number()
+
     complaint = {
         **complaint_data,
+        "complaint_number": complaint_number,
         "user_id": user_id,
         "status": "SUBMITTED",
         "priority": (

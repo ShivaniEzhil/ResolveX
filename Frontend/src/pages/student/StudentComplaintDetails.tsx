@@ -81,7 +81,7 @@ export const StudentComplaintDetailsPage: React.FC<StudentComplaintDetailsProps>
   return (
     <DashboardLayout
       role="STUDENT"
-      title={complaint ? `Ticket #${complaint.id}` : "Complaint Details"}
+      title={complaint ? `Ticket #${complaint.complaint_number}` : "Complaint Details"}
       activeItem="my-complaints"
       onNavigate={onNavigateTab}
     >

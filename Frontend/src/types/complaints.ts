@@ -3,6 +3,7 @@ import type { ComplaintPriorityType } from "../components/common/PriorityBadge";
 
 export interface ComplaintItem {
   id: string;
+  complaint_number: string;
   title: string;
   description: string;
   location: string;

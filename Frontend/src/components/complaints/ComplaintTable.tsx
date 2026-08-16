@@ -35,7 +35,7 @@ export const ComplaintTable: React.FC<ComplaintTableProps> = ({
       <table className="rx-table">
         <thead>
           <tr>
-            <th>ID</th>
+            <th>Complaint ID</th>
             <th>Title</th>
             <th>Category</th>
             <th>Priority</th>
@@ -48,9 +48,9 @@ export const ComplaintTable: React.FC<ComplaintTableProps> = ({
         </thead>
         <tbody>
           {complaints.map((c) => (
-            <tr key={c.id}>
+            <tr key={c.complaint_number}>
               <td style={{ fontFamily: "var(--rx-font-mono)", fontSize: "0.8125rem" }}>
-                {c.id}
+                {c.complaint_number}
               </td>
               <td style={{ fontWeight: 600, maxWidth: 240 }}>
                 <div

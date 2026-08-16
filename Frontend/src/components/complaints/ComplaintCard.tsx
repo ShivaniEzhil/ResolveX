@@ -18,7 +18,7 @@ export const ComplaintCard: React.FC<ComplaintCardProps> = ({
     <Card className="rx-complaint-card">
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 12 }}>
         <span style={{ fontSize: "0.75rem", fontFamily: "var(--rx-font-mono)", color: "var(--rx-text-muted)" }}>
-          {complaint.id}
+          {complaint.complaint_number}
         </span>
         <div style={{ display: "flex", gap: 6 }}>
           <PriorityBadge priority={complaint.priority} />

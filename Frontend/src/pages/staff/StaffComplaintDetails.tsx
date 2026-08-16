@@ -232,7 +232,7 @@ export const StaffComplaintDetailsPage: React.FC<
       role="STAFF"
       title={
         complaint
-          ? `Task ${complaint.id} Details`
+          ? `Task ${complaint.complaint_number} Details`
           : "Complaint Details"
       }
       activeItem="complaints"
