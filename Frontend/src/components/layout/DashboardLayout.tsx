@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import Header from "./Header";
 import type { UserRole } from "../../types/auth";
+import { getNotifications } from "../../services/notificationService";
 import "./layout.css";
 
 interface DashboardLayoutProps {
@@ -21,11 +22,48 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
   subtitle,
   activeItem = "dashboard",
   onNavigate,
-  unreadNotificationsCount = 0,
+  unreadNotificationsCount,
   onNotificationClick,
   children,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const loadUnreadNotifications = async () => {
+      try {
+        const result = await getNotifications();
+
+        const count = (result.notifications || []).filter(
+          (notification) => !notification.is_read
+        ).length;
+
+        setUnreadCount(count);
+      } catch (error) {
+        console.error(
+          "Failed to load notification count:",
+          error
+        );
+      }
+    };
+
+    // API request intentionally updates component state.
+    loadUnreadNotifications();
+  }, []);
+
+  const notificationCount =
+    unreadNotificationsCount !== undefined
+      ? unreadNotificationsCount
+      : unreadCount;
+
+  const handleNotificationClick = () => {
+    if (onNotificationClick) {
+      onNotificationClick();
+      return;
+    }
+
+    onNavigate?.("notifications");
+  };
 
   return (
     <div className="rx-layout">
@@ -41,8 +79,8 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({
         <Header
           title={title}
           subtitle={subtitle}
-          unreadNotificationsCount={unreadNotificationsCount}
-          onNotificationClick={onNotificationClick}
+          unreadNotificationsCount={notificationCount}
+          onNotificationClick={handleNotificationClick}
           onMenuClick={() => setIsMobileMenuOpen(true)}
         />
 
