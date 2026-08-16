@@ -305,6 +305,18 @@ def assign_complaint_endpoint(
             detail="Complaint not found",
         )
 
+    # Notify the assigned staff member
+    create_notification(
+        user_id=staff_user["id"],
+        complaint_id=complaint_id,
+        title="New Complaint Assigned",
+        message=(
+            f'A new complaint has been assigned to you: '
+            f'"{updated_complaint["title"]}"'
+        ),
+        notification_type="COMPLAINT_ASSIGNED",
+    )
+
     create_audit_log(
         user_id=current_user["id"],
         complaint_id=complaint_id,

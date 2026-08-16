@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from bson import ObjectId
 
 from app.database.mongodb import database
+from app.services.user_service import get_user_by_id
 
 
 complaints_collection = database["complaints"]
@@ -72,6 +73,20 @@ def get_complaint_by_id(complaint_id: str) -> dict | None:
 
     complaint["id"] = str(complaint["_id"])
     complaint.pop("_id", None)
+
+    # Add assigned staff name for frontend display
+    assigned_staff_id = complaint.get("assigned_to")
+
+    if assigned_staff_id:
+        staff_user = get_user_by_id(assigned_staff_id)
+
+        if staff_user:
+            complaint["assignedStaffName"] = staff_user.get(
+                "name",
+                "Staff Member",
+            )
+        else:
+            complaint["assignedStaffName"] = "Staff Member"
 
     return complaint
 
@@ -192,6 +207,20 @@ def get_complaints_for_user(
     for complaint in cursor:
         complaint["id"] = str(complaint["_id"])
         complaint.pop("_id", None)
+
+        # Add assigned staff name for frontend display
+        assigned_staff_id = complaint.get("assigned_to")
+
+        if assigned_staff_id:
+            staff_user = get_user_by_id(assigned_staff_id)
+
+            if staff_user:
+                complaint["assignedStaffName"] = staff_user.get(
+                    "name",
+                    "Staff Member",
+                )
+            else:
+                complaint["assignedStaffName"] = "Staff Member"
 
         complaints.append(complaint)
 
