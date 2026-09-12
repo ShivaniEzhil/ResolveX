@@ -18,6 +18,10 @@ export interface ComplaintItem {
   assignedStaffName?: string;
   ai_summary?: string;
   ai_reason?: string;
+  attachment_url?: string;
+  attachment_name?: string;
+  attachment_type?: string;
+  attachment_size?: number;
   created_at: string;
   updated_at: string;
 }

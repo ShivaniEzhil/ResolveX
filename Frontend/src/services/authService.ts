@@ -3,6 +3,8 @@ import type {
   LoginRequest,
   LoginResponse,
   MeResponse,
+  RegisterRequest,
+  RegisterResponse,
 } from "../types/auth";
 
 export const login = async (
@@ -11,6 +13,17 @@ export const login = async (
   const response = await api.post<LoginResponse>(
     "/auth/login",
     credentials,
+  );
+
+  return response.data;
+};
+
+export const register = async (
+  data: RegisterRequest,
+): Promise<RegisterResponse> => {
+  const response = await api.post<RegisterResponse>(
+    "/auth/register",
+    data,
   );
 
   return response.data;

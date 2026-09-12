@@ -5,6 +5,7 @@ import DashboardLayout from "../../components/layout/DashboardLayout";
 import ComplaintFilters from "../../components/complaints/ComplaintFilters";
 import ComplaintTable from "../../components/complaints/ComplaintTable";
 import AssignmentModal from "../../components/complaints/AssignmentModal";
+import StatusUpdateModal from "../../components/complaints/StatusUpdateModal";
 
 import Card from "../../components/common/Card";
 import Pagination from "../../components/common/Pagination";
@@ -14,6 +15,7 @@ import ErrorState from "../../components/common/ErrorState";
 import {
   getComplaints,
   assignComplaint,
+  updateComplaintStatus,
 } from "../../services/complaintService";
 
 import { getUsers } from "../../services/userService";
@@ -55,6 +57,12 @@ export const AdminComplaints: React.FC<
 
   const [assignModalComplaint, setAssignModalComplaint] =
     useState<ComplaintItem | null>(null);
+
+  const [statusModalComplaint, setStatusModalComplaint] =
+    useState<ComplaintItem | null>(null);
+
+  const [statusSuccessMessage, setStatusSuccessMessage] =
+    useState<string | null>(null);
 
   const [currentPage, setCurrentPage] =
     useState(1);
@@ -297,6 +305,69 @@ export const AdminComplaints: React.FC<
   };
 
   // ============================================================
+  // Status Update
+  // ============================================================
+
+  const handleUpdateStatus = async (
+    complaintId: string,
+    nextStatus: "IN_PROGRESS" | "RESOLVED"
+  ) => {
+    try {
+      setError("");
+      setStatusSuccessMessage(null);
+
+      const result = await updateComplaintStatus(
+        complaintId,
+        {
+          status: nextStatus,
+        }
+      );
+
+      const updatedComplaint: ComplaintItem = result.complaint;
+
+      setComplaints((previous) =>
+        previous.map((complaint) =>
+          complaint.id === complaintId
+            ? {
+                ...complaint,
+                ...updatedComplaint,
+                assignedStaffName:
+                  updatedComplaint.assignedStaffName || complaint.assignedStaffName,
+              }
+            : complaint
+        )
+      );
+
+      setStatusSuccessMessage(
+        `Complaint ${updatedComplaint.complaint_number || ""} status successfully updated to ${
+          nextStatus === "IN_PROGRESS" ? "In Progress" : "Resolved"
+        }.`
+      );
+
+      setStatusModalComplaint(null);
+    } catch (err) {
+      console.error("Failed to update complaint status:", err);
+
+      if (axios.isAxiosError(err)) {
+        if (err.response?.status === 403) {
+          setError("You do not have permission to update complaint status.");
+        } else if (err.response?.status === 400) {
+          setError(
+            err.response.data?.detail || "Invalid status transition requested."
+          );
+        } else if (err.response?.status === 404) {
+          setError("Complaint not found.");
+        } else {
+          setError("Unable to update complaint status. Please try again.");
+        }
+      } else {
+        setError("Unable to update complaint status. Please try again.");
+      }
+      throw err;
+    }
+  };
+
+  // ============================================================
   // Loading state
   // ============================================================
 
@@ -350,6 +421,38 @@ export const AdminComplaints: React.FC<
       activeItem="complaints"
       onNavigate={onNavigate}
     >
+      {statusSuccessMessage && (
+        <div
+          style={{
+            background: "var(--rx-success-bg)",
+            color: "var(--rx-success)",
+            border: "1px solid var(--rx-success-border, #A7F3D0)",
+            padding: "12px 16px",
+            borderRadius: "var(--rx-radius-md)",
+            marginBottom: 16,
+            fontSize: "0.875rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <span>✓ {statusSuccessMessage}</span>
+          <button
+            type="button"
+            onClick={() => setStatusSuccessMessage(null)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--rx-success)",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {error && (
         <Card>
           <div
@@ -383,8 +486,7 @@ export const AdminComplaints: React.FC<
             )
           }
           onUpdateStatus={(complaint) =>
-            onSelectComplaint &&
-            onSelectComplaint(
+            setStatusModalComplaint(
               complaint
             )
           }
@@ -418,6 +520,23 @@ export const AdminComplaints: React.FC<
         }
         onAssign={
           handleAssign
+        }
+      />
+
+      <StatusUpdateModal
+        isOpen={
+          !!statusModalComplaint
+        }
+        onClose={() =>
+          setStatusModalComplaint(
+            null
+          )
+        }
+        complaint={
+          statusModalComplaint
+        }
+        onUpdateStatus={
+          handleUpdateStatus
         }
       />
     </DashboardLayout>

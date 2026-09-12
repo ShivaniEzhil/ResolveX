@@ -104,7 +104,7 @@ export const ComplaintTable: React.FC<ComplaintTableProps> = ({
                         {c.assigned_to ? "Reassign" : "Assign"}
                       </Button>
                     )}
-                    {onUpdateStatus && c.status !== "RESOLVED" && (
+                    {onUpdateStatus && (c.status === "ASSIGNED" || c.status === "IN_PROGRESS") && (
                       <Button
                         variant="secondary"
                         size="sm"

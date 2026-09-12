@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import DashboardLayout from "../../components/layout/DashboardLayout";
 import ComplaintDetails from "../../components/complaints/ComplaintDetails";
+import StatusUpdateModal from "../../components/complaints/StatusUpdateModal";
 import Button from "../../components/common/Button";
 import Card from "../../components/common/Card";
 import {
@@ -45,6 +46,8 @@ export const StaffComplaintDetailsPage: React.FC<
     useState<boolean>(Boolean(complaintId));
 
   const [error, setError] = useState("");
+  const [statusSuccessMessage, setStatusSuccessMessage] = useState<string | null>(null);
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
 
   useEffect(() => {
     if (!complaintId) {
@@ -172,58 +175,47 @@ export const StaffComplaintDetailsPage: React.FC<
     }
   };
 
-  const handleStatusChange = async () => {
-    if (!complaint) {
-      return;
-    }
-
-    const nextStatus =
-      complaint.status === "ASSIGNED"
-        ? "IN_PROGRESS"
-        : "RESOLVED";
-
+  const handleStatusUpdate = async (
+    complaintIdToUpdate: string,
+    nextStatus: "IN_PROGRESS" | "RESOLVED"
+  ) => {
     try {
       setError("");
+      setStatusSuccessMessage(null);
 
-      const result =
-        await updateComplaintStatus(
-          complaint.id,
-          {
-            status: nextStatus,
-          }
-        );
+      const result = await updateComplaintStatus(
+        complaintIdToUpdate,
+        {
+          status: nextStatus,
+        }
+      );
 
       setComplaint(result.complaint);
-    } catch (err) {
-      console.error(
-        "Failed to update complaint status:",
-        err
+      setStatusSuccessMessage(
+        `Task status successfully updated to ${
+          nextStatus === "IN_PROGRESS" ? "In Progress" : "Resolved"
+        }.`
       );
+      setIsStatusModalOpen(false);
+    } catch (err) {
+      console.error("Failed to update task status:", err);
 
       if (axios.isAxiosError(err)) {
         if (err.response?.status === 403) {
-          setError(
-            "You can only update complaints assigned to you."
-          );
+          setError("You can only update complaints assigned to you.");
         } else if (err.response?.status === 400) {
           setError(
-            err.response.data?.detail ||
-              "Invalid complaint status transition."
+            err.response.data?.detail || "Invalid task status transition."
           );
         } else if (err.response?.status === 404) {
-          setError(
-            "Complaint not found."
-          );
+          setError("Complaint not found.");
         } else {
-          setError(
-            "Unable to update complaint status. Please try again."
-          );
+          setError("Unable to update complaint status. Please try again.");
         }
       } else {
-        setError(
-          "Unable to update complaint status. Please try again."
-        );
+        setError("Unable to update complaint status. Please try again.");
       }
+      throw err;
     }
   };
 
@@ -249,6 +241,38 @@ export const StaffComplaintDetailsPage: React.FC<
           </Button>
         )}
       </div>
+
+      {statusSuccessMessage && (
+        <div
+          style={{
+            background: "var(--rx-success-bg)",
+            color: "var(--rx-success)",
+            border: "1px solid var(--rx-success-border, #A7F3D0)",
+            padding: "12px 16px",
+            borderRadius: "var(--rx-radius-md)",
+            marginBottom: 16,
+            fontSize: "0.875rem",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <span>✓ {statusSuccessMessage}</span>
+          <button
+            type="button"
+            onClick={() => setStatusSuccessMessage(null)}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--rx-success)",
+              cursor: "pointer",
+              fontWeight: 600,
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {isLoading ? (
         <Card>
@@ -293,9 +317,14 @@ export const StaffComplaintDetailsPage: React.FC<
             complaint={complaint}
             responses={responses}
             onAddResponse={handleAddResponse}
-            onUpdateStatusClick={
-              handleStatusChange
-            }
+            onUpdateStatusClick={() => setIsStatusModalOpen(true)}
+          />
+
+          <StatusUpdateModal
+            isOpen={isStatusModalOpen}
+            onClose={() => setIsStatusModalOpen(false)}
+            complaint={complaint}
+            onUpdateStatus={handleStatusUpdate}
           />
         </>
       ) : (

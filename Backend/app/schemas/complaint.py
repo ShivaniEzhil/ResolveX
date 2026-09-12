@@ -23,6 +23,11 @@ class ComplaintCreate(BaseModel):
         description="Location where the issue occurred",
     )
 
+    attachment_url: str | None = None
+    attachment_name: str | None = None
+    attachment_type: str | None = None
+    attachment_size: int | None = None
+
 class ComplaintUpdate(BaseModel):
     title: str | None = Field(
         default=None,

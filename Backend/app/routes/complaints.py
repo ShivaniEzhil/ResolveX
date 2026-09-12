@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from pydantic import ValidationError
 
 from app.services.routing_service import find_best_staff
 from app.services.user_service import get_user_by_id
@@ -6,6 +7,7 @@ from app.services.audit_service import create_audit_log
 from app.services.notification_service import create_notification
 from app.core.dependencies import get_current_user
 from app.services.ai_service import analyze_complaint
+from app.services.storage_service import upload_complaint_image
 from app.schemas.complaint import (
     ComplaintCreate,
     ComplaintUpdate,
@@ -32,17 +34,92 @@ router = APIRouter(
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def submit_complaint(
-    complaint: ComplaintCreate,
+async def submit_complaint(
+    request: Request,
     current_user=Depends(get_current_user),
 ):
+    content_type = request.headers.get("content-type", "")
+
+    title: str = ""
+    description: str = ""
+    location: str = ""
+    attachment_metadata: dict = {}
+
+    if "application/json" in content_type:
+        try:
+            body = await request.json()
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid JSON payload",
+            )
+        if not isinstance(body, dict):
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail="Request body must be a JSON object",
+            )
+        try:
+            complaint_data = ComplaintCreate.model_validate(body)
+        except ValidationError as val_err:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=val_err.errors(),
+            )
+        title = complaint_data.title
+        description = complaint_data.description
+        location = complaint_data.location
+        if complaint_data.attachment_url:
+            attachment_metadata = {
+                "attachment_url": complaint_data.attachment_url,
+                "attachment_name": complaint_data.attachment_name,
+                "attachment_type": complaint_data.attachment_type,
+                "attachment_size": complaint_data.attachment_size,
+            }
+
+    elif "multipart/form-data" in content_type or "application/x-www-form-urlencoded" in content_type:
+        form = await request.form()
+        form_payload = {}
+        for key in ("title", "description", "location"):
+            val = form.get(key)
+            if val is not None:
+                form_payload[key] = val
+
+        try:
+            complaint_data = ComplaintCreate.model_validate(form_payload)
+        except ValidationError as val_err:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=val_err.errors(),
+            )
+
+        title = complaint_data.title
+        description = complaint_data.description
+        location = complaint_data.location
+
+        file_field = form.get("file") or form.get("image") or form.get("attachment")
+        if file_field and hasattr(file_field, "filename") and file_field.filename:
+            attachment_metadata = await upload_complaint_image(file_field)
+
+    else:
+        try:
+            body = await request.json()
+            complaint_data = ComplaintCreate.model_validate(body)
+            title = complaint_data.title
+            description = complaint_data.description
+            location = complaint_data.location
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Unsupported Content-Type. Please use application/json or multipart/form-data",
+            )
+
     ai_analysis = None
 
     try:
         ai_result = analyze_complaint(
-            title=complaint.title,
-            description=complaint.description,
-            location=complaint.location,
+            title=title,
+            description=description,
+            location=location,
         )
 
         ai_analysis = {
@@ -57,8 +134,15 @@ def submit_complaint(
         # AI failure should not prevent complaint submission
         ai_analysis = None
 
+    complaint_dict = {
+        "title": title,
+        "description": description,
+        "location": location,
+        **attachment_metadata,
+    }
+
     created_complaint = create_complaint(
-        complaint.model_dump(),
+        complaint_dict,
         current_user["id"],
         ai_analysis,
     )
@@ -70,7 +154,7 @@ def submit_complaint(
     )
     if ai_analysis:
         staff = find_best_staff(
-        ai_analysis["department"]
+            ai_analysis["department"]
         )
 
         if staff:

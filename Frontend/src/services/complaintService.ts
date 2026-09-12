@@ -4,6 +4,7 @@ export interface CreateComplaintPayload {
   title: string;
   description: string;
   location: string;
+  file?: File | null;
 }
 
 export interface ComplaintQueryParams {
@@ -25,9 +26,33 @@ export interface ComplaintStatusPayload {
 }
 
 export async function createComplaint(
-  data: CreateComplaintPayload
+  data: CreateComplaintPayload | FormData
 ) {
-  const response = await api.post("/complaints/", data);
+  if (data instanceof FormData) {
+    const response = await api.post("/complaints/", data, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  }
+
+  if (data.file) {
+    const formData = new FormData();
+    formData.append("title", data.title);
+    formData.append("description", data.description);
+    formData.append("location", data.location);
+    formData.append("file", data.file);
+
+    const response = await api.post("/complaints/", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  }
+
+  const response = await api.post("/complaints/", {
+    title: data.title,
+    description: data.description,
+    location: data.location,
+  });
   return response.data;
 }
 
