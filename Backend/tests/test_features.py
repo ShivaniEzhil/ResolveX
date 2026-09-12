@@ -1,7 +1,9 @@
 import io
 import asyncio
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
+# pyrefly: ignore [missing-import]
 from fastapi.testclient import TestClient
+# pyrefly: ignore [missing-import]
 from fastapi import UploadFile
 
 from app.main import app

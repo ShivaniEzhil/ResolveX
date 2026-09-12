@@ -15,12 +15,15 @@ function Login() {
   // Login form state
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   // Register form state
   const [registerName, setRegisterName] = useState("");
   const [registerEmail, setRegisterEmail] = useState("");
   const [registerPassword, setRegisterPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [showRegisterPassword, setShowRegisterPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -119,196 +122,128 @@ function Login() {
 
   return (
     <div className="rx-login-wrapper">
-      {/* Ambient Background Elements */}
+      {/* Background ambient decorative shapes */}
       <div className="rx-login-bg-glow-1" aria-hidden="true" />
       <div className="rx-login-bg-glow-2" aria-hidden="true" />
       <div className="rx-login-grid-overlay" aria-hidden="true" />
 
-      <div className="rx-login-container">
+      <main className="rx-login-container">
         {/* ============================================================
-            LEFT COLUMN — Hero & Building Blocks Pipeline
+            LEFT COLUMN — Product & AI Workflow Presentation
             ============================================================ */}
-        <div className="rx-hero-column">
-          {/* Live Status Badge */}
+        <section className="rx-hero-column" aria-labelledby="rx-hero-heading">
+          {/* Top Status Badge */}
           <div className="rx-hero-badge" role="status" aria-live="polite">
             <span className="rx-hero-badge-dot" aria-hidden="true" />
-            AI-Powered · Active
+            <span>AI-Powered • Active</span>
           </div>
 
-          {/* Main Headline */}
-          <h1 className="rx-hero-title">
-            Turn complaints{" "}
-            <span className="rx-hero-gradient-text">into resolutions.</span>
+          {/* Main Heading */}
+          <h1 id="rx-hero-heading" className="rx-hero-title">
+            Turn complaints into
+            <span className="rx-hero-title-accent"> resolutions.</span>
           </h1>
 
-          {/* Subtitle */}
+          {/* Supporting Text */}
           <p className="rx-hero-subtitle">
-            ResolveX is an AI-powered complaint management platform that automatically
-            classifies, routes, and tracks every grievance from submission to resolution.
+            ResolveX is an AI-powered complaint management platform that classifies, routes, and tracks complaints from submission to resolution.
           </p>
 
-          {/* Key Value Props */}
-          <div className="rx-phrase-container" aria-label="Key capabilities">
-            <span className="rx-phrase-pill">Classify</span>
-            <span aria-hidden="true">→</span>
-            <span className="rx-phrase-pill">Route</span>
-            <span aria-hidden="true">→</span>
-            <span className="rx-phrase-pill">Resolve</span>
+          {/* Connected Building Blocks Workflow */}
+          <div className="rx-flow-blocks" aria-label="ResolveX Process">
+            <span className="rx-flow-block">Classify</span>
+            <span className="rx-flow-arrow" aria-hidden="true">→</span>
+            <span className="rx-flow-block">Route</span>
+            <span className="rx-flow-arrow" aria-hidden="true">→</span>
+            <span className="rx-flow-block">Resolve</span>
           </div>
 
-          {/* Building Block Pipeline */}
-          <div className="rx-pipeline-flow" role="list" aria-label="Complaint lifecycle">
-            {/* Step 1: Submit */}
-            <div className="rx-block-card" role="listitem">
-              <div className="rx-block-left">
-                <div className="rx-block-icon rx-block-icon--submit" aria-hidden="true">
-                  ✦
-                </div>
-                <div className="rx-block-content">
-                  <span className="rx-block-step">Step 1</span>
-                  <span className="rx-block-title">Complaint Submit</span>
-                  <span className="rx-block-desc">Student submits grievance with optional evidence</span>
-                </div>
+          {/* 4 Compact Workflow Cards */}
+          <div className="rx-workflow-cards" role="list" aria-label="Workflow Stages">
+            {/* Step 1 */}
+            <div className="rx-workflow-card" role="listitem">
+              <div className="rx-card-main">
+                <span className="rx-step-num" aria-hidden="true">1</span>
+                <span className="rx-step-title">Complaint Submitted</span>
               </div>
-              <span className="rx-block-tag">Student</span>
+              <span className="rx-status-badge rx-status-badge--student">Student</span>
             </div>
 
-            {/* Connector */}
-            <div className="rx-flow-connector" aria-hidden="true">
-              <div className="rx-flow-line" />
-            </div>
-
-            {/* Step 2: AI Analysis */}
-            <div className="rx-block-card" role="listitem">
-              <div className="rx-block-left">
-                <div className="rx-block-icon rx-block-icon--ai" aria-hidden="true">
-                  ✦
-                </div>
-                <div className="rx-block-content">
-                  <span className="rx-block-step">Step 2</span>
-                  <span className="rx-block-title">AI Analysis</span>
-                  <span className="rx-block-desc">Gemini AI classifies category, priority & department</span>
-                </div>
+            {/* Step 2 */}
+            <div className="rx-workflow-card" role="listitem">
+              <div className="rx-card-main">
+                <span className="rx-step-num" aria-hidden="true">2</span>
+                <span className="rx-step-title">AI Analysis</span>
               </div>
-              <span className="rx-block-tag rx-block-tag--ai">Gemini AI</span>
+              <span className="rx-status-badge rx-status-badge--gemini">Gemini AI</span>
             </div>
 
-            {/* Connector */}
-            <div className="rx-flow-connector" aria-hidden="true">
-              <div className="rx-flow-line" />
-            </div>
-
-            {/* Step 3: Routing */}
-            <div className="rx-block-card" role="listitem">
-              <div className="rx-block-left">
-                <div className="rx-block-icon rx-block-icon--route" aria-hidden="true">
-                  ✦
-                </div>
-                <div className="rx-block-content">
-                  <span className="rx-block-step">Step 3</span>
-                  <span className="rx-block-title">Smart Routing</span>
-                  <span className="rx-block-desc">Auto-assigned to the best available staff member</span>
-                </div>
+            {/* Step 3 */}
+            <div className="rx-workflow-card" role="listitem">
+              <div className="rx-card-main">
+                <span className="rx-step-num" aria-hidden="true">3</span>
+                <span className="rx-step-title">Smart Routing</span>
               </div>
-              <span className="rx-block-tag">Admin</span>
+              <span className="rx-status-badge rx-status-badge--admin">Admin</span>
             </div>
 
-            {/* Connector */}
-            <div className="rx-flow-connector" aria-hidden="true">
-              <div className="rx-flow-line" />
-            </div>
-
-            {/* Step 4: Resolved */}
-            <div className="rx-block-card" role="listitem">
-              <div className="rx-block-left">
-                <div className="rx-block-icon rx-block-icon--resolve" aria-hidden="true">
-                  ✦
-                </div>
-                <div className="rx-block-content">
-                  <span className="rx-block-step">Step 4</span>
-                  <span className="rx-block-title">Resolved</span>
-                  <span className="rx-block-desc">Staff resolves and student is notified instantly</span>
-                </div>
+            {/* Step 4 */}
+            <div className="rx-workflow-card" role="listitem">
+              <div className="rx-card-main">
+                <span className="rx-step-num" aria-hidden="true">4</span>
+                <span className="rx-step-title">Resolved</span>
               </div>
-              <span className="rx-block-tag rx-block-tag--success">✓ Done</span>
+              <span className="rx-status-badge rx-status-badge--done">Done</span>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* ============================================================
-            RIGHT COLUMN — Auth Card
+            RIGHT COLUMN — Authentication Card
             ============================================================ */}
-        <div className="rx-auth-column">
+        <section className="rx-auth-column" aria-label="Authentication">
           <div className="rx-auth-card">
-            {/* Card Header */}
+            {/* Card Header with RX Brand */}
             <div className="rx-auth-header">
               <div className="rx-auth-logo-badge" aria-hidden="true">RX</div>
-              <h1>ResolveX</h1>
+              <h2 className="rx-auth-brand-title">ResolveX</h2>
               <p className="rx-auth-subtitle">
                 {mode === "login"
-                  ? "Sign in to manage your complaints"
-                  : "Create your student account"}
+                  ? "Sign in to manage complaints"
+                  : "Create your account to get started"}
               </p>
             </div>
 
-            {/* Tab Switcher */}
-            <div className="rx-auth-tabs" role="tablist">
-              <button
-                type="button"
-                role="tab"
-                id="tab-signin"
-                aria-selected={mode === "login"}
-                aria-controls="panel-signin"
-                className={`rx-auth-tab ${mode === "login" ? "rx-auth-tab--active" : ""}`}
-                onClick={() => switchMode("login")}
-              >
-                Sign In
-              </button>
-              <button
-                type="button"
-                role="tab"
-                id="tab-register"
-                aria-selected={mode === "register"}
-                aria-controls="panel-register"
-                className={`rx-auth-tab ${mode === "register" ? "rx-auth-tab--active" : ""}`}
-                onClick={() => switchMode("register")}
-              >
-                Create Account
-              </button>
-            </div>
-
-            {/* Success Alert */}
+            {/* Alerts */}
             {successMessage && (
               <div className="rx-auth-alert rx-auth-alert--success" role="status">
-                <span aria-hidden="true">✓</span>
-                {successMessage}
+                <svg className="rx-alert-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+                <span>{successMessage}</span>
               </div>
             )}
 
-            {/* Error Alert */}
             {error && (
               <div className="rx-auth-alert rx-auth-alert--error" role="alert">
-                <span aria-hidden="true">⚠</span>
-                {error}
+                <svg className="rx-alert-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span>{error}</span>
               </div>
             )}
 
-            {/* Sign In Form */}
+            {/* Form */}
             {mode === "login" ? (
-              <form
-                id="panel-signin"
-                role="tabpanel"
-                aria-labelledby="tab-signin"
-                onSubmit={handleLoginSubmit}
-              >
-                <div className="rx-input-group">
-                  <label htmlFor="login-email" className="rx-input-label">
+              <form onSubmit={handleLoginSubmit} className="rx-auth-form" noValidate>
+                <div className="rx-form-group">
+                  <label htmlFor="login-email" className="rx-form-label">
                     Email Address
                   </label>
                   <input
                     id="login-email"
                     type="email"
-                    className="rx-input-field"
+                    className="rx-form-input"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@university.edu"
@@ -317,42 +252,62 @@ function Login() {
                   />
                 </div>
 
-                <div className="rx-input-group">
-                  <label htmlFor="login-password" className="rx-input-label">
+                <div className="rx-form-group">
+                  <label htmlFor="login-password" className="rx-form-label">
                     Password
                   </label>
-                  <input
-                    id="login-password"
-                    type="password"
-                    className="rx-input-field"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    required
-                    autoComplete="current-password"
-                  />
+                  <div className="rx-password-wrapper">
+                    <input
+                      id="login-password"
+                      type={showPassword ? "text" : "password"}
+                      className="rx-form-input rx-form-input--password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Enter your password"
+                      required
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      className="rx-password-toggle"
+                      onClick={() => setShowPassword(!showPassword)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                        </svg>
+                      ) : (
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="rx-auth-submit-btn"
+                  className="rx-auth-submit"
                   disabled={loading}
                   aria-busy={loading}
                 >
                   {loading ? (
-                    <>
-                      <span aria-hidden="true">⟳</span> Signing in...
-                    </>
+                    <span className="rx-btn-loading">
+                      <span className="rx-spinner" aria-hidden="true" />
+                      <span>Signing in...</span>
+                    </span>
                   ) : (
                     "Sign In"
                   )}
                 </button>
 
-                <div className="rx-auth-footer-switch">
-                  Don&apos;t have an account?
+                <div className="rx-auth-footer">
+                  <span>Don&apos;t have an account?</span>{" "}
                   <button
                     type="button"
-                    className="rx-auth-switch-btn"
+                    className="rx-link-btn"
                     onClick={() => switchMode("register")}
                   >
                     Sign Up
@@ -360,21 +315,15 @@ function Login() {
                 </div>
               </form>
             ) : (
-              /* Register Form */
-              <form
-                id="panel-register"
-                role="tabpanel"
-                aria-labelledby="tab-register"
-                onSubmit={handleRegisterSubmit}
-              >
-                <div className="rx-input-group">
-                  <label htmlFor="reg-name" className="rx-input-label">
-                    Full Name <span style={{ color: "var(--rx-danger)" }} aria-label="required">*</span>
+              <form onSubmit={handleRegisterSubmit} className="rx-auth-form" noValidate>
+                <div className="rx-form-group">
+                  <label htmlFor="reg-name" className="rx-form-label">
+                    Full Name <span className="rx-required-star" aria-hidden="true">*</span>
                   </label>
                   <input
                     id="reg-name"
                     type="text"
-                    className="rx-input-field"
+                    className="rx-form-input"
                     value={registerName}
                     onChange={(e) => setRegisterName(e.target.value)}
                     placeholder="e.g. John Doe"
@@ -385,76 +334,115 @@ function Login() {
                   />
                 </div>
 
-                <div className="rx-input-group">
-                  <label htmlFor="reg-email" className="rx-input-label">
-                    Email Address <span style={{ color: "var(--rx-danger)" }} aria-label="required">*</span>
+                <div className="rx-form-group">
+                  <label htmlFor="reg-email" className="rx-form-label">
+                    Email Address <span className="rx-required-star" aria-hidden="true">*</span>
                   </label>
                   <input
                     id="reg-email"
                     type="email"
-                    className="rx-input-field"
+                    className="rx-form-input"
                     value={registerEmail}
                     onChange={(e) => setRegisterEmail(e.target.value)}
-                    placeholder="e.g. student@resolvex.edu"
+                    placeholder="e.g. student@university.edu"
                     required
                     autoComplete="email"
                   />
                 </div>
 
-                <div className="rx-input-group">
-                  <label htmlFor="reg-password" className="rx-input-label">
-                    Password <span style={{ color: "var(--rx-danger)" }} aria-label="required">*</span>
+                <div className="rx-form-group">
+                  <label htmlFor="reg-password" className="rx-form-label">
+                    Password <span className="rx-required-star" aria-hidden="true">*</span>
                   </label>
-                  <input
-                    id="reg-password"
-                    type="password"
-                    className="rx-input-field"
-                    value={registerPassword}
-                    onChange={(e) => setRegisterPassword(e.target.value)}
-                    placeholder="Minimum 8 characters"
-                    required
-                    minLength={8}
-                    autoComplete="new-password"
-                  />
+                  <div className="rx-password-wrapper">
+                    <input
+                      id="reg-password"
+                      type={showRegisterPassword ? "text" : "password"}
+                      className="rx-form-input rx-form-input--password"
+                      value={registerPassword}
+                      onChange={(e) => setRegisterPassword(e.target.value)}
+                      placeholder="Min 8 characters"
+                      required
+                      minLength={8}
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      className="rx-password-toggle"
+                      onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                      aria-label={showRegisterPassword ? "Hide password" : "Show password"}
+                    >
+                      {showRegisterPassword ? (
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                        </svg>
+                      ) : (
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
-                <div className="rx-input-group">
-                  <label htmlFor="reg-confirm-password" className="rx-input-label">
-                    Confirm Password <span style={{ color: "var(--rx-danger)" }} aria-label="required">*</span>
+                <div className="rx-form-group">
+                  <label htmlFor="reg-confirm" className="rx-form-label">
+                    Confirm Password <span className="rx-required-star" aria-hidden="true">*</span>
                   </label>
-                  <input
-                    id="reg-confirm-password"
-                    type="password"
-                    className="rx-input-field"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Re-enter password"
-                    required
-                    minLength={8}
-                    autoComplete="new-password"
-                  />
+                  <div className="rx-password-wrapper">
+                    <input
+                      id="reg-confirm"
+                      type={showConfirmPassword ? "text" : "password"}
+                      className="rx-form-input rx-form-input--password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter password"
+                      required
+                      minLength={8}
+                      autoComplete="new-password"
+                    />
+                    <button
+                      type="button"
+                      className="rx-password-toggle"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    >
+                      {showConfirmPassword ? (
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                        </svg>
+                      ) : (
+                        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="rx-auth-submit-btn"
+                  className="rx-auth-submit"
                   disabled={loading}
                   aria-busy={loading}
                 >
                   {loading ? (
-                    <>
-                      <span aria-hidden="true">⟳</span> Creating Account...
-                    </>
+                    <span className="rx-btn-loading">
+                      <span className="rx-spinner" aria-hidden="true" />
+                      <span>Creating Account...</span>
+                    </span>
                   ) : (
                     "Create Account"
                   )}
                 </button>
 
-                <div className="rx-auth-footer-switch">
-                  Already have an account?
+                <div className="rx-auth-footer">
+                  <span>Already have an account?</span>{" "}
                   <button
                     type="button"
-                    className="rx-auth-switch-btn"
+                    className="rx-link-btn"
                     onClick={() => switchMode("login")}
                   >
                     Sign In
@@ -463,8 +451,8 @@ function Login() {
               </form>
             )}
           </div>
-        </div>
-      </div>
+        </section>
+      </main>
     </div>
   );
 }
