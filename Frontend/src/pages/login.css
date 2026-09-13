@@ -566,9 +566,10 @@
 /* ============================================================
    DESKTOP ONLY (>= 861px and >= 580px viewport height)
    Enforces genuine 1-screen viewport without any scrollbars
+   Strictly scoped to the login page so dashboard remains scrollable
    ============================================================ */
 @media (min-width: 861px) and (min-height: 580px) {
-  html, body {
+  body.rx-login-page-active {
     overflow: hidden !important;
   }
 

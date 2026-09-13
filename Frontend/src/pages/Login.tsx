@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -9,6 +9,13 @@ import "./login.css";
 function Login() {
   const navigate = useNavigate();
   const { login } = useAuth();
+
+  useEffect(() => {
+    document.body.classList.add("rx-login-page-active");
+    return () => {
+      document.body.classList.remove("rx-login-page-active");
+    };
+  }, []);
 
   const [mode, setMode] = useState<"login" | "register">("login");
 
